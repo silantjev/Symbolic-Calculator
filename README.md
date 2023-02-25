@@ -11,11 +11,13 @@
 ccalc.py — консольная версия калькулятора
 graph.py — вспомогательный модуль
 symbolic.py — вспомогательный модуль
+requirements.txt — файл с необходимыми библиотеками
+Dockerfile используется для создания образа приложения ccalc
 
 Графическая версия находится в разработке
 
-Используемые внешние модули:
-sympy, os
+Используемые библиотеки:
+os, sympy=1.11.1
 
 Файлы с расширением py следует запускать программой-интерпретатором:
 python3 ccalc.py
@@ -28,4 +30,16 @@ sudo apt-get install python3
 
 Также необходимо установить модуль SymPy:
 pip install sympy
+или
+pip install -r requirements.txt
 
+Команды для docker.
+
+-Создание образа:
+docker build -t ccalc_image .
+
+-Запуск:
+docker run -i --rm --name ccalc ccalc_image
+
+-Остановка:
+docker stop ccalc

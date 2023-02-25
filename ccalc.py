@@ -225,8 +225,7 @@ def new_expr(se):
     return se_new
 
 if __name__ == '__main__':
-    expr = 'x/y'
-    expr = 'integrate(x**2, (x, a, b))'
+    expr = '0'
     main_menu(expr)
 
 
