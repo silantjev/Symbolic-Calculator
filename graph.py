@@ -111,7 +111,7 @@ def insert(graph: dict, expr: str):
     """
     expr0 = expr
     while True:
-        if expr.startswith('(') and expr.endswith(')'):
+        if is_unnecessary(expr):
             expr = expr[1:-1]
         elif expr.startswith('+'):
             expr = expr[1:]
@@ -129,7 +129,6 @@ def insert(graph: dict, expr: str):
     graph[expr0] = p
     for arg in p[0]:
         insert(graph, arg)
-
 
 def parse(expr: str) -> tuple:
     """ Parses the expression 'expr' in the form ([arg_1,..., arg_n], n-ary operation) """
@@ -213,10 +212,35 @@ def splitting_comma(expr):
     return args
 
 
+def is_unnecessary(expr):
+    """ Check if there are unnecessary parentheses at the bounds
+    expr: string expression, which supposed to be balanced
+    """
+
+    if expr.startswith('(') and expr.endswith(')'):
+        pass
+    else:
+        return False
+
+    level = 0
+    for s in expr[:-1]:
+        if s == '(':
+            level += 1
+        elif s == ')':
+            level -= 1
+        if level == 0:
+            return False
+
+    # If we came here, then the first '(' is still unclosed
+
+    return True
+
+
 if __name__ == '__main__':
     # Examples:
     expr = '|x+|z|-y|'
     expr = '|x+z|+|y|'
+    expr = '(x)/(x)'
     expr = cleaning(expr)
     print('Expression:', expr)
     print('Calculation graph:')
