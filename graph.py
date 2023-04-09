@@ -207,8 +207,9 @@ def splitting_comma(expr):
         sp = splitting2(expr, ',')
 
     # If 'sp' becomes None, then there is no more comma,
-    # so the rest 'expr' is the last argument:
-    args.append(expr)
+    # so the rest 'expr' is the last argument (if it is not empty):
+    if expr.strip() != '':
+        args.append(expr)
     return args
 
 
