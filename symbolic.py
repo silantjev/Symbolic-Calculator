@@ -3,6 +3,7 @@
 
 from graph import make_graph
 from graph import cleaning
+from graph import splitting_comma
 from sympy import *
 
 # abs = globals()['Abs']
@@ -75,6 +76,21 @@ class Symbolic:
         opers = {'sum': '+', 'prod': '-'}
         if oper in opers.keys():
             return self.sumprod(args, opers[oper])
+        if oper == 'integrate':
+            assert len(args) > 1
+            integrand = args.pop(0)
+            limits = []
+            for arg in args:
+                if arg.startswith('('):
+                    assert arg.endswith(')')
+                    subargs = splitting_comma(arg[1:-1]) # list [x] or [x, a, b]
+                    if subargs[-1].strip() == '':
+                        subargs.pop()
+                else:
+                    subargs = [arg]
+                limits.append(tuple(subargs))
+            return integrate(integrand, *limits)
+
         # https://docs.sympy.org/latest/modules/functions/index.html
         fun = globals()[oper]
         return fun(*args)
@@ -84,7 +100,7 @@ class Symbolic:
         self.variables = {}
         expr = cleaning(expr)
         self.graph = make_graph(expr)
-        se = self.calc_sym(expr)
+        # se = self.calc_sym(expr) # for debugging
         try:
             se = self.calc_sym(expr)
             # Without any variable the expression 'se' is still a string,
@@ -99,18 +115,19 @@ class Symbolic:
 
 
 if __name__ == '__main__':
-    #expr = 'round(x+4.1) + y!'
+    # expr = 'round(x+4.1) + y!'
     # expr = 'diff(x^7,x)'
-    #print(locals()['diff'])
+    # print(locals()['diff'])
     expr = 'abs(x-y)'
-    print(expr)
+    expr = 'integrate(x^2 + x + 1, (x,), y,)'
+    print('expr = ', expr)
     symb = Symbolic()
     se = symb.symbolic_expr(expr)
-    print(se)
+    print('se = ', se)
     if se != 'Error':
         print(se.subs([('x', 5), ('y', 3)]).evalf(10))
-        #x = variables['x']
-        #y = variables['y']
-        #print(se.subs([(x, 5), (y, 3)]))
+        # x = variables['x']
+        # y = variables['y']
+        # print(se.subs([(x, 5), (y, 3)]))
 
 
