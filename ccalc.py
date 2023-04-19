@@ -248,9 +248,13 @@ class CCalculator(Symbolic):
 
         self.se =  se_new
 
-if __name__ == '__main__':
+def main():
     expr = '0'
     ccalcul = CCalculator()
     ccalcul.main_menu(expr)
+
+
+if __name__ == '__main__':
+    main()
 
 
