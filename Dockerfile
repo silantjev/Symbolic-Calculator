@@ -2,10 +2,10 @@ FROM python:3.10
 
 WORKDIR /code/
 
-COPY ./requirements.txt ./
+COPY ./requirements_ccalc.txt ./
 
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install -r requirements_ccalc.txt
 
 COPY . ./
 

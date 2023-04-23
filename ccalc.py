@@ -5,6 +5,7 @@ from symbolic import Symbolic
 
 import os
 from sympy import *
+from simple_term_menu import TerminalMenu
 
 
 class CCalculator(Symbolic):
@@ -53,49 +54,47 @@ class CCalculator(Symbolic):
             if subs_string:
                 print('Значения переменных: ' + subs_string)
             print()
-            print('Меню:\n')
-            print('q — Выйти')
-            print('n — Ввести новое выражение')
-            print('v — Задать значение переменной')
-            print('d — Удалить значение переменной')
-            print('a — Удалить значение всех переменных')
-            print('e — Вычислить текущее выражение')
-            print('h — Показать справку')
-            print('o — Изменить опции')
 
-            choice = input('Ваш выбор: ')
+            menu = [
+                'Выйти',
+                'Ввести новое выражение',
+                'Вычислить текущее выражение',
+                'Задать значение переменной',
+                'Удалить значение переменной',
+                'Удалить значение всех переменных',
+                'Показать справку',
+                'Изменить опции',
+            ]
+            terminal_menu = TerminalMenu(menu, clear_menu_on_exit=True)
+            ch = terminal_menu.show()
             print()
-            if choice == '':
-                continue
-            else:
-                ch = choice[0]
-            
-            if ch == 'q':
+
+            if ch == 0 or ch is None:
                 break
             
-            if ch == 'n':
+            if ch == 1:
                 self.new_expr()
 
-            if ch == 'e':
+            if ch == 2:
                 self.evaluate()
 
-            if ch == 'v':
+            if ch == 3:
                 c = True
                 while c:
                     c = self.change_values()
 
-            if ch == 'd':
+            if ch == 4:
                 c = True
                 while c:
                     c = self.delete_values()
             
-            if ch == 'a':
+            if ch == 5:
                 self.delete_values(delete_all=True)
 
-            if ch == 'h':
+            if ch == 6:
                 self.show_help()
 
-            if ch == 'o':
+            if ch == 7:
                 self.change_options()
 
 
@@ -103,7 +102,7 @@ class CCalculator(Symbolic):
         print('Опции:')
         for k, v in self.options.items():
             print(f'\t{self.explanations[k]}: {k} = {v}')
-            val = input('Введите новое значение опции (пустая строка — пропустить): ')
+            val = input('Введите новое значение опции\n(для отмены нажмите Enter): ')
             if val:
                 try:
                     val = int(val)
@@ -117,7 +116,7 @@ class CCalculator(Symbolic):
         path = os.path.join(dir_path, 'help_rus.txt')
         with open(path, 'r', encoding='utf-8') as file:
             print(file.read())
-        input('Нажмите "ввод"')
+        input('Нажмите Enter')
 
 
     def change_values(self):
@@ -141,7 +140,7 @@ class CCalculator(Symbolic):
         for var in other_set:
             print(f'\t\t{var} = {self.values[var]}')
         while True:
-            choice = input('Введите имя переменной (пустая строка — вернуться в меню): ')
+            choice = input('Введите имя переменной \n(чтобы вернуться в меню нажмите Enter): ')
             choice = choice.strip()
             if choice == '':
                 return False
@@ -149,13 +148,13 @@ class CCalculator(Symbolic):
                 print('Предупреждение: переменной нет в текущем выражении')
                 if choice not in self.values.keys():
                     print('Предупреждение: переменной нет и среди заданных переменных')
-                    expr =  input('Введите значение новой переменной (пустая строка — отмена): ')
+                    expr =  input('Введите значение новой переменной\n(для отмены нажмите Enter): ')
                 else:
-                    expr =  input('Введите значение переменной (пустая строка — отмена): ')
+                    expr =  input('Введите значение переменной\n(для отмены нажмите Enter): ')
                 if expr == '':
                     continue
             else:
-                expr =  input('Введите значение переменной (пустая строка — оставить свободной): ')
+                expr =  input('Введите значение переменной\n(для отмены нажмите Enter): ')
             try:
                 value = self.symbolic_expr(expr)
                 if value == 'Error':
@@ -171,7 +170,7 @@ class CCalculator(Symbolic):
         """ Reruns True/False: should be called once more? """
         if not self.values:
             print('Ни одна переменная не задана')
-            input('Нажмите "ввод"')
+            input('Нажмите Enter')
             return False
         current = {var.name for var in self.se.free_symbols}
         current_set = current & set(self.values.keys())
@@ -199,7 +198,7 @@ class CCalculator(Symbolic):
                     return False
         else:
             while True:
-                choice = input('Введите имя переменной для удаления (пустая строка — отмена): ')
+                choice = input('Введите имя переменной для удаления\n(для отмены нажмите Enter): ')
                 choice = choice.strip()
                 if choice == '':
                     return False
@@ -222,34 +221,40 @@ class CCalculator(Symbolic):
         print(f'{self.se} = {sec}' + subs_string)
         if str(sec).find('zoo') != -1 or str(sec).find('nan') != -1:
             print('Деление на 0')
-            input('Нажмите "ввод"')
+            input('Нажмите Enter')
             return
 
         while True:
             choice = input('Сохранить как текущее (y/n — да/нет): ')
             if choice == '':
-                continue
+                break
             else:
                 ch = choice[0]
 
             if ch in 'yд':
                 self.se = sec
                 break
-            elif ch in 'nн':
+            elif ch in 'nнq':
                 break
 
 
     def new_expr(self):
-        se_new = 'Error'
-        while se_new == 'Error':
-            expr = input('Введите выражение (пустая строка — отмена): ')
+        while True:
+            expr = input('Введите выражение\n(для отмены нажмите Enter): ')
             expr = expr.replace('_', '(' + str(self.se) + ')')
             # print('Новое выражение:', expr)
-            if expr:
-                se_new = self.symbolic_expr(expr)
-            else:
+            if expr == '':
                 return
-
+            try:
+                se_new = self.symbolic_expr(expr)
+                if se_new == 'Error':
+                    raise AssertionError('Неизвестная ошибка')
+                if str(se_new).find('zoo') != -1 or str(se_new).find('nan') != -1:
+                    raise ZeroDivisionError('Деление на 0')
+                break
+            except (AssertionError, ValueError, TypeError, KeyError, ZeroDivisionError) as exc:
+                print(f'Ошибка: {exc}')
+                print('Попытайтесь ещё раз.\n')
         self.se =  se_new
 
 def main():

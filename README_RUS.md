@@ -23,7 +23,7 @@ Dockerfile используется для создания образа при�
 Полная графическая версия находится в разработке
 
 Используемые библиотеки:
-os, sympy=1.11.1, PyQt5=5.15.7
+os, sympy=1.11.1, PyQt5=5.15.7, simple_term_menu==1.6.1
 
 Файлы с расширением py следует запускать программой-интерпретатором:
 python3 ccalc.py
@@ -35,7 +35,7 @@ python ccalc.py
 sudo apt-get install python3
 
 Также необходимо установить модули:
-pip install sympy PyQt5
+pip install sympy PyQt5 simple_term_menu
 или
 pip install -r requirements.txt
 
@@ -45,7 +45,7 @@ pip install -r requirements.txt
 docker build -t ccalc_image .
 
 -Запуск:
-docker run -i --rm --name ccalc ccalc_image
+docker run -it --rm --name ccalc ccalc_image
 
 -Остановка:
 docker stop ccalc
