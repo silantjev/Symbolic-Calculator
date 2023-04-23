@@ -33,6 +33,10 @@ class Symbolic:
         return s
 
     def bottom(self, oper):
+        """ Transforms expression 'oper' (operator without arguments)
+        to a SymPy object.
+        Creates SymPy Symbols if needed
+        """
         if oper == 'pi':
             return pi
         if oper == 'E':
@@ -41,15 +45,17 @@ class Symbolic:
             return I
         try:
             complex(oper)
-            # If ValueError has not occurred, then it is a real or imaginary compoex number and we transform it to a sympy class object
-            return parse_expr(oper)
-        except:
+        except ValueError:
             if oper not in self.variables.keys():
                 self.variables[oper] = Symbol(oper)
             return self.variables[oper]
 
+        # If ValueError has not occurred, then 'oper' is an integer, float or complex type number,
+        # so we transform it to a SymPy class object by the SymPy function 'parse_expr'
+        return parse_expr(oper)
+
     def calc_sym(self, expr):
-        """ Calculates the symbolic expression by the graph with the root 'expr' """
+        """ Calculates the symbolic expression by the tree 'graph' with the root 'expr' """
         args, oper =  self.graph[expr]
         if args == []:
             return self.bottom(oper)
@@ -72,17 +78,28 @@ class Symbolic:
         if oper == '!':
             return factorial(self.calc_sym(args[0]))
         if oper == 'round':
-            return floor(args[0] + '- 0.5')
+            if len(args) == 1:
+                return floor(args[0] + '+ 0.5')
+            if len(args) == 2:
+                try: 
+                    d = int(args[1])
+                except ValueError:
+                    raise AssertionError('Второй аргумент функции "round" должен быть целым числом')
+                return 10**(-d) * floor(f'10**{d} * ({args[0]}) + 0.5')
+            assert len(args) != 0, 'Функция "round" требует аргумента'
+            # Остался случай len(args) > 2
+            raise AssertionError('Функция "round" не допускает более двух аргументов')
+
         opers = {'sum': '+', 'prod': '-'}
         if oper in opers.keys():
             return self.sumprod(args, opers[oper])
         if oper == 'integrate':
-            assert len(args) > 1
+            assert len(args) > 1, 'оператор "integrate" требует больше аргументов'
             integrand = args.pop(0)
             limits = []
             for arg in args:
                 if arg.startswith('('):
-                    assert arg.endswith(')')
+                    assert arg.endswith(')'), 'Лишние символы после скобки'
                     subargs = splitting_comma(arg[1:-1]) # list [x] or [x, a, b]
                     if subargs[-1].strip() == '':
                         subargs.pop()
@@ -108,6 +125,10 @@ class Symbolic:
             if isinstance(se, str):
                 se = parse_expr(se)
 
+        except AssertionError as exc:
+            raise
+        except KeyError as exc:
+            raise KeyError(f'Функция {str(exc)} не найдена')
         except: # for incorrect expressions
             se = 'Error'
 
@@ -115,17 +136,17 @@ class Symbolic:
 
 
 if __name__ == '__main__':
-    # expr = 'round(x+4.1) + y!'
     # expr = 'diff(x^7,x)'
     # print(locals()['diff'])
     expr = 'abs(x-y)'
     expr = 'integrate(x^2 + x + 1, (x,), y,)'
+    expr = 'round(x+11115.2222, -3) + y'
     print('expr = ', expr)
     symb = Symbolic()
     se = symb.symbolic_expr(expr)
     print('se = ', se)
     if se != 'Error':
-        print(se.subs([('x', 5), ('y', 3)]).evalf(10))
+        print(se.subs([('x', 5), ('y', 0)]).evalf(10))
         # x = variables['x']
         # y = variables['y']
         # print(se.subs([(x, 5), (y, 3)]))

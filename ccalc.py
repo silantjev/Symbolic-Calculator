@@ -80,12 +80,12 @@ class CCalculator(Symbolic):
                 self.evaluate()
 
             if ch == 'v':
-                c = self.change_values()
+                c = True
                 while c:
                     c = self.change_values()
 
             if ch == 'd':
-                c = self.delete_values()
+                c = True
                 while c:
                     c = self.delete_values()
             
@@ -109,7 +109,7 @@ class CCalculator(Symbolic):
                     val = int(val)
                     if val > 1:
                         self.options[k] = val
-                except:
+                except TypeError:
                     pass
 
     def show_help(self):
@@ -121,6 +121,7 @@ class CCalculator(Symbolic):
 
 
     def change_values(self):
+        """ Reruns True/False: should be called once more? """
         current = {var.name for var in self.se.free_symbols}
         current_set = current & set(self.values.keys())
         current_unset = current - set(self.values.keys())
@@ -157,14 +158,17 @@ class CCalculator(Symbolic):
                 expr =  input('Введите значение переменной (пустая строка — оставить свободной): ')
             try:
                 value = self.symbolic_expr(expr)
+                if value == 'Error':
+                    raise TypeError('Неизвестна ошибка')
                 self.values[choice] = value
                 return True
-            except:
-                print('Error')
+            except (AssertionError, ValueError, TypeError, KeyError) as exc:
+                print(f'Ошибка: {exc}')
                 return True
 
 
     def delete_values(self, delete_all=False):
+        """ Reruns True/False: should be called once more? """
         if not self.values:
             print('Ни одна переменная не задана')
             input('Нажмите "ввод"')

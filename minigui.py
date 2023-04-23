@@ -68,17 +68,24 @@ class Calculator(Symbolic):
         # current = self.get_current_variables()
         # return self.get_values(current)
 
-    def dec_round(self, x: float):
-        """ Round a float number.
+    def dec_round(self, x):
+        """ Round a float-like number.
         Number of non-zero digits is taken from the attribute 'options'
         """
-        if x == 0:
+        try:
+            x = float(x)
+        except TypeError:
+            return x
+        if x == 0.0:
             return 0.0
         exponent = int(log(abs(x),10)) + (abs(x) >= 1)
         mantissa = x * 10**(-exponent)
         digits = self.options['digits']
-        mantissa = 10**(-digits) * int(10**digits * mantissa + 0.5) # Correct rounding ('round' works not always correctly)
-        return float(mantissa * 10**exponent)
+        # For correct rounding we use function 'int'
+        # (function 'round' works not always correctly):
+        mantissa = 10**(-digits) * int(10**digits * mantissa + 0.5)
+        # We use round to delete an incorrent tail:
+        return round(mantissa * 10**exponent, digits)
 
     def evaluate(self):
         """ Evaluates 'se' """
@@ -89,11 +96,7 @@ class Calculator(Symbolic):
         sec = self.se.subs(subs_list)
         digits = self.options['digits']
         sec = sec.evalf(digits)
-        try:
-            sec = float(sec)
-            sec = self.dec_round(sec)
-        except TypeError:
-            pass
+        sec = self.dec_round(sec)
         return sec
 
 
@@ -148,13 +151,17 @@ class MainMenu(QDialog):
         self.calc.expr = expr
         try:
             se_new = self.calc.symbolic_expr(expr)
-        except AssertionError:
-            QMessageBox.warning(self, 'Warning', 'Не корректное выражение!')
+        except (AssertionError, KeyError, TypeError) as exc:
+            QMessageBox.warning(self, 'Warning', f'Не корректное выражение!\n{exc}')
             return
         if se_new == 'Error':
             QMessageBox.warning(self, 'Warning', 'Не корректное выражение!')
             return
         self.calc.se = se_new
+        try:
+            se_new = float(se_new)
+        except TypeError:
+            pass
         self.se_text.setText(str(se_new))
         self.eval_down()
 

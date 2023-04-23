@@ -7,7 +7,7 @@
 
 def cleaning(expr):
     """ Checks and clean the expression 'expr' """
-    assert is_balanced(expr)
+    assert is_balanced(expr), "Скобки не сбалансированы"
     expr = expr.strip()
     replace_dict = {
         '[': '(', '{': '(', ']': ')', '}': ')',
@@ -124,14 +124,18 @@ def insert(graph: dict, expr: str):
         else:
             break
     
-    assert expr != ''
+    # assert expr != ''
+    if expr == '':
+        expr = '0'
     p = parse(expr) # p = ([arg_1,..., arg_n], n-ary operation)
     graph[expr0] = p
     for arg in p[0]:
         insert(graph, arg)
 
 def parse(expr: str) -> tuple:
-    """ Parses the expression 'expr' in the form ([arg_1,..., arg_n], n-ary operation) """
+    """ Parses the expression 'expr'
+    Returns ([arg_1,..., arg_n], n-ary operation)
+    """
     sp = splitting2(expr, ['+', '-'])
     if sp == None:
         sp =  splitting2(expr, ['*', '/', '//', '%'])
@@ -150,7 +154,7 @@ def parse(expr: str) -> tuple:
 
     i = expr.find('(')
     if i != -1:
-        assert expr.endswith(')')
+        assert expr.endswith(')'), 'Лишние символы после закрывающей скобки'
         fun = expr[:i] # name of a function
         args = splitting_comma(expr[i+1:-1]) # arguments of the function
         return args, fun
