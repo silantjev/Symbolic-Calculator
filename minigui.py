@@ -2,102 +2,15 @@
 # Mini-GUI version
 # Under development...
 
-from symbolic import Symbolic
-
-# from qt_classes import Vars
-from qt_classes import QLE
-
-import os
+# import os
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
-from sympy import *
+from sympy import * # ?
 
-
-class Calculator(Symbolic):
-    """ Mini GUI version of calculator.
-    The inherited method 'symbolic_expr' is used.
-    """
-
-    # Attributes:
-
-    # expr: input expression
-
-    # se: current expression as a SymPy object (Sympy Expression)
-
-    # sec: evaluated 'se' (Sympy Expression Calculated)
-
-    # values: is a dict of their values {'x': value}, where value is a number
-    # (if a variable 'x' does not have a value, then we output it as an abstract variable)
-
-    # options: values of options
-
-    # explanations: description of options (a constant)
-
-    # Options:
-    # digits: means the number of digits, which are shown by evaluation
-
-    def __init__(self, expr='0'):
-        """ expr: SymPy expression of the string type """
-
-        expr = str(expr)  # For the case if 'expr' is a SymPy object 
-        self.expr = expr
-        self.se = parse_expr(expr) # SymPy parser 'parse_expr' is used
-        self.sec = self.se # SymPy Expression Calculated
-        self.variables = {}
-        self.values = {}
-        self.options = {'digits': 8}
-        self.explanations = {'digits': 'Точность вычисления в количестве цифр'}
-
-    # def get_current_variables(self):
-        # current = {var.name for var in self.se.free_symbols}
-        # return current
-
-    # def get_other_variables(self):
-        # other = set(self.variables.keys()) - self.get_current_variables()
-        # return other
-
-    # def get_values(self, variable_set=None):
-        # if variable_set is None:
-            # variable_set = self.variables.keys()
-        # subs_strings= [f'{k} = {v}' for k, v in self.values.items() if k in variable_set]
-        # subs_string = ', '.join(subs_strings)
-        # return subs_string
-
-    # def current_values(self):
-        # current = self.get_current_variables()
-        # return self.get_values(current)
-
-    def dec_round(self, x):
-        """ Round a float-like number.
-        Number of non-zero digits is taken from the attribute 'options'
-        """
-        try:
-            x = float(x)
-        except TypeError:
-            return x
-        if x == 0.0:
-            return 0.0
-        exponent = int(log(abs(x),10)) + (abs(x) >= 1)
-        mantissa = x * 10**(-exponent)
-        digits = self.options['digits']
-        # For correct rounding we use function 'int'
-        # (function 'round' works not always correctly):
-        mantissa = 10**(-digits) * int(10**digits * mantissa + 0.5)
-        # We use round to delete an incorrent tail:
-        return round(mantissa * 10**exponent, digits)
-
-    def evaluate(self):
-        """ Evaluates 'se' """
-        subs_list = [(k,v) for k, v in self.values.items()]
-        # subs_string = self.current_values()
-        # if subs_string:
-            # subs_string = ', где ' + subs_string
-        sec = self.se.subs(subs_list)
-        digits = self.options['digits']
-        sec = sec.evalf(digits)
-        sec = self.dec_round(sec)
-        return sec
+# from qt_classes import Vars
+from qt_classes import QLE
+from gen_calc import Calculator
 
 
 class MainMenu(QDialog):
@@ -149,20 +62,25 @@ class MainMenu(QDialog):
         if self.calc.expr == expr:
             return
         self.calc.expr = expr
-        try:
-            se_new = self.calc.symbolic_expr(expr)
-        except (AssertionError, KeyError, TypeError) as exc:
-            QMessageBox.warning(self, 'Warning', f'Не корректное выражение!\n{exc}')
+
+        text = self.calc.set_new_expr(expr)
+        if text is not None:
+            QMessageBox.warning(self, 'Warning', text)
             return
-        if se_new == 'Error':
-            QMessageBox.warning(self, 'Warning', 'Не корректное выражение!')
-            return
-        self.calc.se = se_new
-        try:
-            se_new = float(se_new)
-        except TypeError:
-            pass
-        self.se_text.setText(str(se_new))
+        # try:
+            # se_new = self.calc.symbolic_expr(expr)
+        # except (AssertionError, KeyError, TypeError) as exc:
+            # QMessageBox.warning(self, 'Warning', f'Не корректное выражение!\n{exc}')
+            # return
+        # if se_new == 'Error':
+            # QMessageBox.warning(self, 'Warning', 'Не корректное выражение!')
+            # return
+        # self.calc.se = se_new
+        # try:
+            # se_new = float(se_new)
+        # except TypeError:
+            # pass
+        self.se_text.setText(str(self.calc.get_nice()))
         self.eval_down()
 
     def se_up(self):
@@ -190,7 +108,7 @@ class MainMenu(QDialog):
         else:
             self.calc.sec = sec
             self.sec_text.setText(str(sec))
-# 
+
     # def vars(self):
         # var_dialog = Vars(parent=self, calc=self.calc)
         # var_dialog.setWindowTitle('Variables')

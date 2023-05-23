@@ -1,14 +1,14 @@
 # Symbolic calculator 2.0
 # Console version
 
-from symbolic import Symbolic
+from gen_calc import Calculator
 
 import os
 from sympy import *
 from simple_term_menu import TerminalMenu
 
 
-class CCalculator(Symbolic):
+class CCalculator(Calculator):
     """ Console version of calculator.
     The inherited method 'symbolic_expr' is used.
     """
@@ -29,19 +29,7 @@ class CCalculator(Symbolic):
 
     def __init__(self, expr='0'):
         """ expr: SymPy expression of the string type """
-
-        expr = str(expr)  # For the case if 'expr' is a SymPy object 
-        self.se = parse_expr(expr)  # SymPy parser
-        self.variables = {}
-        self.values = {}
-        self.options = {'digits': 8}
-        self.explanations = {'digits': 'Точность вычисления в количестве цифр'}
-
-    def current_values(self):
-        current = {var.name for var in self.se.free_symbols}
-        subs_strings= [f'{k} = {v}' for k, v in self.values.items() if k in current]
-        subs_string = ', '.join(subs_strings)
-        return subs_string
+        super().__init__(expr)
 
     def main_menu(self, expr=None):
         if expr is not None:
@@ -49,7 +37,7 @@ class CCalculator(Symbolic):
             self.se = parse_expr(expr)
 
         while True:
-            print('\nТекущее выражение:', self.se)
+            print('\nТекущее выражение:', self.get_nice())
             subs_string = self.current_values()
             if subs_string:
                 print('Значения переменных: ' + subs_string)
@@ -112,33 +100,31 @@ class CCalculator(Symbolic):
                     pass
 
     def show_help(self):
-        dir_path = os.path.dirname(__file__)
-        path = os.path.join(dir_path, 'help_rus.txt')
-        with open(path, 'r', encoding='utf-8') as file:
-            print(file.read())
+        print(self.get_help_text())
         input('Нажмите Enter')
 
 
     def change_values(self):
-        """ Reruns True/False: should be called once more? """
-        current = {var.name for var in self.se.free_symbols}
-        current_set = current & set(self.values.keys())
-        current_unset = current - set(self.values.keys())
-        other_set = set(self.values.keys()) - current
+        """ Reruns True if it should be called once more """
+        current = self.get_current_variables()
+        set_variables = set(self.values.keys())
+        current_set = current & set_variables
+        current_unset = current - set_variables 
+        other_set = set_variables - current
         if current:
             print('Переменные в текущем выражении:')
         if current_set:
             print('\tзаданные:')
         for var in current_set:
-            print(f'\t\t{var} = {self.values[var]}')
+            print(f'\t\t{var} = {self.get_value(var)}')
         if current_unset:
             print('\tсвободные:')
         for var in current_unset:
             print(f'\t\t{var}')
         if other_set:
-            print('Другие переменные:')
+            print('Переменные, отсутствующие в текущем выражении:')
         for var in other_set:
-            print(f'\t\t{var} = {self.values[var]}')
+            print(f'\t\t{var} = {self.get_value(var)}')
         while True:
             choice = input('Введите имя переменной \n(чтобы вернуться в меню нажмите Enter): ')
             choice = choice.strip()
@@ -167,23 +153,28 @@ class CCalculator(Symbolic):
 
 
     def delete_values(self, delete_all=False):
-        """ Reruns True/False: should be called once more? """
+        """ Reruns True if it should be called once more """
         if not self.values:
             print('Ни одна переменная не задана')
             input('Нажмите Enter')
             return False
-        current = {var.name for var in self.se.free_symbols}
-        current_set = current & set(self.values.keys())
-        other_set = set(self.values.keys()) - current
-        print('Заданные переменные:')
+        
+        current = self.get_current_variables()
+        set_variables = set(self.values.keys())
+        current_set = current & set_variables
+        other_set = set_variables - current
+
         if current_set:
             print('\tПеременные в текущем выражении:')
+
         for var in current_set:
-            print(f'\t\t{var} = {self.values[var]}')
+            print(f'\t\t{var} = {self.get_value(var)}')
+
         if other_set:
-            print('\tДругие переменные:')
+            print('Переменные, отсутствующие в текущем выражении:')
         for var in other_set:
-            print(f'\t\t{var} = {self.values[var]}')
+            print(f'\t\t{var} = {self.get_value(var)}')
+
         if delete_all:
             while True:
                 choice = input('Удалить значения всех переменных (y/n — да/нет): ')
@@ -208,16 +199,11 @@ class CCalculator(Symbolic):
                 else:
                     print(f'Переменная {choice} отсутствует')
 
-
-
     def evaluate(self):
-        subs_list = [(k,v) for k, v in self.values.items()]
+        sec = super().evaluate()
         subs_string = self.current_values()
         if subs_string:
             subs_string = ', где ' + subs_string
-        sec = self.se.subs(subs_list)
-        digits = self.options['digits']
-        sec = sec.evalf(digits)
         print(f'{self.se} = {sec}' + subs_string)
         if str(sec).find('zoo') != -1 or str(sec).find('nan') != -1:
             print('Деление на 0')
@@ -232,30 +218,23 @@ class CCalculator(Symbolic):
                 ch = choice[0]
 
             if ch in 'yд':
-                self.se = sec
+                self.se = parse_expr(str(sec))
                 break
             elif ch in 'nнq':
                 break
 
-
     def new_expr(self):
         while True:
             expr = input('Введите выражение\n(для отмены нажмите Enter): ')
-            expr = expr.replace('_', '(' + str(self.se) + ')')
-            # print('Новое выражение:', expr)
             if expr == '':
-                return
-            try:
-                se_new = self.symbolic_expr(expr)
-                if se_new == 'Error':
-                    raise AssertionError('Неизвестная ошибка')
-                if str(se_new).find('zoo') != -1 or str(se_new).find('nan') != -1:
-                    raise ZeroDivisionError('Деление на 0')
                 break
-            except (AssertionError, ValueError, TypeError, KeyError, ZeroDivisionError) as exc:
-                print(f'Ошибка: {exc}')
-                print('Попытайтесь ещё раз.\n')
-        self.se =  se_new
+
+            text = self.set_new_expr(expr)
+
+            if text == None:
+                break
+
+            print(text)
 
 def main():
     expr = '0'
