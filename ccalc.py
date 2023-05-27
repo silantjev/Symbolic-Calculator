@@ -106,25 +106,9 @@ class CCalculator(Calculator):
 
     def change_values(self):
         """ Reruns True if it should be called once more """
-        current = self.get_current_variables()
-        set_variables = set(self.values.keys())
-        current_set = current & set_variables
-        current_unset = current - set_variables 
-        other_set = set_variables - current
-        if current:
-            print('Переменные в текущем выражении:')
-        if current_set:
-            print('\tзаданные:')
-        for var in current_set:
-            print(f'\t\t{var} = {self.get_value(var)}')
-        if current_unset:
-            print('\tсвободные:')
-        for var in current_unset:
-            print(f'\t\t{var}')
-        if other_set:
-            print('Переменные, отсутствующие в текущем выражении:')
-        for var in other_set:
-            print(f'\t\t{var} = {self.get_value(var)}')
+        current, lines = self.get_variables()
+        text = '\n'.join(lines)
+        print(text)
         while True:
             choice = input('Введите имя переменной \n(чтобы вернуться в меню нажмите Enter): ')
             choice = choice.strip()
@@ -133,10 +117,10 @@ class CCalculator(Calculator):
             if choice not in current:
                 print('Предупреждение: переменной нет в текущем выражении')
                 if choice not in self.values.keys():
-                    print('Предупреждение: переменной нет и среди заданных переменных')
-                    expr =  input('Введите значение новой переменной\n(для отмены нажмите Enter): ')
+                    print(f'Предупреждение: переменной {choice} нет и среди заданных переменных')
+                    expr =  input(f'Введите значение новой переменной {choice}\n(для отмены нажмите Enter): ')
                 else:
-                    expr =  input('Введите значение переменной\n(для отмены нажмите Enter): ')
+                    expr =  input(f'Введите значение переменной {choice}\n(для отмены нажмите Enter): ')
                 if expr == '':
                     continue
             else:
@@ -159,21 +143,8 @@ class CCalculator(Calculator):
             input('Нажмите Enter')
             return False
         
-        current = self.get_current_variables()
-        set_variables = set(self.values.keys())
-        current_set = current & set_variables
-        other_set = set_variables - current
-
-        if current_set:
-            print('\tПеременные в текущем выражении:')
-
-        for var in current_set:
-            print(f'\t\t{var} = {self.get_value(var)}')
-
-        if other_set:
-            print('Переменные, отсутствующие в текущем выражении:')
-        for var in other_set:
-            print(f'\t\t{var} = {self.get_value(var)}')
+        _, lines = self.get_variables(include_unset=False)
+        print('\n'.join(lines))
 
         if delete_all:
             while True:

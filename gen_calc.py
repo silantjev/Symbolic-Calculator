@@ -119,7 +119,32 @@ class Calculator(Symbolic):
         sec = self.dec_round(sec)
         return sec
 
-    def get_help_text(self):
+    def get_variables(self, include_unset=True):
+        current = self.get_current_variables()
+        set_variables = set(self.values.keys())
+        current_set = current & set_variables
+        current_unset = current - set_variables 
+        other_set = set_variables - current
+        lines = []
+        if current:
+            lines.append('Переменные в текущем выражении:')
+        if current_set and include_unset:
+            lines.append('\tзаданные:')
+        for var in current_set:
+            lines.append(f'\t\t{var} = {self.get_value(var)}')
+        if current_unset and include_unset:
+            lines.append('\tсвободные:')
+            for var in current_unset:
+                lines.append(f'\t\t{var}')
+        if other_set:
+            lines.append('Переменные, отсутствующие в текущем выражении:')
+        for var in other_set:
+            lines.append(f'\t\t{var} = {self.get_value(var)}')
+
+        return current, lines #'\n'.join(lines)
+
+    @staticmethod
+    def get_help_text():
         dir_path = os.path.dirname(__file__)
         path = os.path.join(dir_path, 'help_rus.txt')
 
