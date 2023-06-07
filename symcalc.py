@@ -1,38 +1,20 @@
 #!/bin/python3
-import sys
+import argparse
 
-args = sys.argv[1:]
-command = sys.argv[0]
+version = '2.3'
 
-def first_char(s: str):
-    s = s.lower()
-    for ch in s:
-        if ch != '-':
-            return ch
-    return ''
+parser = argparse.ArgumentParser(description=f'Символьный калькулятор: версия {version}', add_help=False)
 
-args = list(map(first_char, args))
+parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='показать справку и выйти')
+parser.add_argument('-m', action='store_true', help='мини-графическая версия (по умолчанию)')
+parser.add_argument('-c', action='store_true', help='консольная версия')
 
-def get_help():
-    print(
-        """
-Символьный калькулятор.
+args = parser.parse_args()
 
-Использование: {} [опции]
-
-Доступные опции:
--m, -g \t мини-графическая версия (по умолчанию)
--c     \t консольная версия
--h     \t справка
-""".format(command)
-    )
-
-if 'h' in args:
-    get_help()
-    quit()
-elif 'm' in args or 'g' in args: 
+if args.m:
     from minigui import main
-elif 'c' in args:
+# elif args.g: # Полная графическая находится в разработке
+elif args.c:
     from ccalc import main 
 else:
     from minigui import main
