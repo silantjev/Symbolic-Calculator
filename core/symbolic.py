@@ -1,10 +1,12 @@
 # This module contains functions (realised as methods)
 # that transform the input string to SymPy expression
 
-from graph import make_graph
-from graph import cleaning
-from graph import splitting_comma
-from sympy import *
+from sympy import * # pylint: disable=wildcard-import, unused-wildcard-import
+
+try:
+    from .graph import make_graph, cleaning, splitting_comma
+except ImportError:
+    from graph import make_graph, cleaning, splitting_comma
 
 # abs = globals()['Abs']
 # min = globals()['Min']

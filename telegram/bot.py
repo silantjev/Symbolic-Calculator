@@ -1,8 +1,13 @@
-from gen_calc import Calculator
-
-import os
+import sys
+from pathlib import Path
 from telebot import TeleBot
-from sympy import *
+from sympy import * # pylint: disable=wildcard-import, unused-wildcard-import
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from core.calculator import Calculator
+from core.logger import make_logger
 
 class BCalculator(Calculator):
     """ bot-calculator """
@@ -27,9 +32,11 @@ class BCalculator(Calculator):
 
 
 class BotCalc(TeleBot):
-    def __init__(self, token):
+    def __init__(self, token, logger):
         super().__init__(token)
+        self.logger = logger
         self.calcs = dict()
+        print(f"Bot created")
 
     def get_calc(self, chat_id, restart=False):
         """ Gets calulator for the chat
@@ -39,7 +46,8 @@ class BotCalc(TeleBot):
             self.calcs.pop(chat_id)
 
         if chat_id not in self.calcs:
-            self.calcs[chat_id] = BCalculator() # separate calculator for each chat with initial expr='0'
+            self.calcs[chat_id] = BCalculator(logger=self.logger) # separate calculator for each chat with initial expr='0'
+            print(f"Bot added some chat")
         return self.calcs[chat_id]
 
     def info(self, chat_id):
@@ -69,20 +77,23 @@ class BotCalc(TeleBot):
         action(message)
 
 try:
-    from mytoken import token
+    from mytoken import TOKEN
 except ModuleNotFoundError:
-    token = '' # enter the token of your bot here
+    TOKEN = '' # enter the token of your bot here
 
-bot = BotCalc(token)
+logger = make_logger(name="telegram_bot", file=True, console=True)
+bot = BotCalc(TOKEN, logger=logger)
 
 @bot.message_handler(commands=['info', 'help', 'h'])
 def info(message):
     chat_id = message.chat.id
+    if chat_id not in bot.calcs:
+        bot.get_calc(chat_id)
     s1 = message.text[1] # first symbol of the command
     if s1 == 'i':
         bot.info(chat_id)
     elif s1 == 'h':
-        bot.send_message(chat_id, Calculator.get_help_text())
+        bot.send_message(chat_id, bot.calcs[chat_id].get_help_text())
 
 @bot.message_handler(commands=['restart'])
 def restart(message):

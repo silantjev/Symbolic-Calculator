@@ -1,9 +1,15 @@
-# General calculator: module for ccalc and minigui 
+# General calculator: module for ccalc, bot and minigui 
 
-import os
-from sympy import *
+import logging
+from pathlib import Path
+from sympy import * # pylint: disable=wildcard-import, unused-wildcard-import
 
-from symbolic import Symbolic
+try:
+    from .logger import make_logger
+    from .symbolic import Symbolic
+except ImportError:
+    from logger import make_logger
+    from symbolic import Symbolic
 
 
 class Calculator(Symbolic):
@@ -29,8 +35,16 @@ class Calculator(Symbolic):
     # Options:
     # digits: means the number of digits, which are shown by evaluation
 
-    def __init__(self, expr='0'):
+    def __init__(self, expr='0', logger=None):
         """ expr: SymPy expression of the string type """
+
+        if logger is None:
+            logger_name = logging.self.__class__.__name__
+            self.logger = make_logger(name=logger_name, file=False, console=False, level=logging.WARNING)
+        else:
+            self.logger = logger
+        level_str = logging.getLevelName(self.logger.level)
+        self.logger.debug("Logger '%s' created with level %s", self.logger.name, level_str)
 
         expr = str(expr)  # For the case if 'expr' is a SymPy object 
         self.expr = expr
@@ -40,6 +54,8 @@ class Calculator(Symbolic):
         self.values = {}
         self.options = {'digits': 8}
         self.explanations = {'digits': 'Точность вычисления в количестве цифр'}
+        self.help_text = ""
+        self.load_help_text()
 
     def set_new_expr(self, expr):
         expr = expr.replace('_', '(' + str(self.se) + ')')
@@ -143,15 +159,26 @@ class Calculator(Symbolic):
 
         return current, lines #'\n'.join(lines)
 
-    @staticmethod
-    def get_help_text():
-        dir_path = os.path.dirname(__file__)
-        path = os.path.join(dir_path, 'help_rus.txt')
+    def get_help_text(self):
+        return self.help_text
 
-        with open(path, 'r', encoding='utf-8') as file:
-            text = file.read()
+    def load_help_text(self):
+        CORE_DIR = Path(__file__).resolve().parent
+        path = CORE_DIR / 'help_rus.txt'
+        if path.exists():
+            try:
+                with open(path, 'r', encoding='utf-8') as file:
+                    self.help_text = file.read()
+            except IOError as e:
+                self.logger.warning("Не удалось открыть файл '%s'", path)
+                print("Не удалось открыть файл '%s'" % path)
+        else:
+            print("Не удалось найти файл '%s'" % path)
 
-        return text
+        if self.help_text == "":
+            self.help_text = "Справка не загрузилась"
+                
+
 
 
 

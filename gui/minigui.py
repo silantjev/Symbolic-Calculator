@@ -2,15 +2,23 @@
 # Mini-GUI version
 # Under development...
 
-# import os
+from pathlib import Path
 import sys
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import * # pylint: disable=wildcard-import, unused-wildcard-import
 from PyQt5.QtCore import Qt
-from sympy import * # ?
+from sympy import * # pylint: disable=wildcard-import, unused-wildcard-import TODO:delete
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from core.calculator import Calculator
+from core.logger import make_logger
 
 # from qt_classes import Vars
-from qt_classes import QLE
-from gen_calc import Calculator
+try:
+    from .qt_classes import QLE
+except ImportError:
+    from qt_classes import QLE
 
 
 class MainMenu(QDialog):
@@ -116,10 +124,11 @@ class MainMenu(QDialog):
 
 
 
-def main():
+def main(log_file=True, log_console=True):
     expr = '0'
     app = QApplication(sys.argv)  # create application
-    calc = Calculator(expr)
+    logger = make_logger(name="minigui", file=log_file, console=log_console)
+    calc = Calculator(expr, logger=logger)
     menu = MainMenu(calc)
     menu.show()
     sys.exit(app.exec_())  # execute the application

@@ -1,11 +1,16 @@
 # Symbolic calculator 2.0
 # Console version
 
-from gen_calc import Calculator
-
-import os
-from sympy import *
+import sys
+from pathlib import Path
 from simple_term_menu import TerminalMenu
+from sympy import * # pylint: disable=wildcard-import, unused-wildcard-import
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from core.calculator import Calculator
+from core.logger import make_logger
 
 
 class CCalculator(Calculator):
@@ -27,9 +32,9 @@ class CCalculator(Calculator):
     # Options:
     # digits: means the number of digits, which are shown by evaluation
 
-    def __init__(self, expr='0'):
+    def __init__(self, expr='0', logger=None):
         """ expr: SymPy expression of the string type """
-        super().__init__(expr)
+        super().__init__(expr, logger=logger)
 
     def main_menu(self, expr=None):
         if expr is not None:
@@ -207,9 +212,10 @@ class CCalculator(Calculator):
 
             print(text)
 
-def main():
+def main(log_file=True, log_console=True):
+    logger = make_logger(name="console", file=log_file, console=log_console)
+    ccalcul = CCalculator(logger=logger)
     expr = '0'
-    ccalcul = CCalculator()
     ccalcul.main_menu(expr)
 
 

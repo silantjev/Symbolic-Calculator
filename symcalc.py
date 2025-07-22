@@ -12,12 +12,12 @@ parser.add_argument('-c', action='store_true', help='консольная вер
 args = parser.parse_args()
 
 if args.m:
-    from minigui import main
+    from gui.minigui import main
 # elif args.g: # Полная графическая находится в разработке
 elif args.c:
-    from ccalc import main 
+    from console.console_calc import main 
 else:
-    from minigui import main
+    from gui.minigui import main
 
 main()
 

@@ -1,10 +1,6 @@
-from symbolic import Symbolic
-
-import os
-import sys
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import * # pylint: disable=wildcard-import, unused-wildcard-import
 from PyQt5.QtCore import Qt
-from sympy import *
+# from sympy import *
 
 class QLE(QLineEdit):
     def __init__(self, *args, **kwargs):
