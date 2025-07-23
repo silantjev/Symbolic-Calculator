@@ -36,7 +36,7 @@ class BotCalc(TeleBot):
         super().__init__(token)
         self.logger = logger
         self.calcs = dict()
-        print(f"Bot created")
+        self.logger.info("Tegram bot enabled")
 
     def get_calc(self, chat_id, restart=False):
         """ Gets calulator for the chat
@@ -47,7 +47,7 @@ class BotCalc(TeleBot):
 
         if chat_id not in self.calcs:
             self.calcs[chat_id] = BCalculator(logger=self.logger) # separate calculator for each chat with initial expr='0'
-            print(f"Bot added some chat")
+            self.logger.info("Bot added some chat")
         return self.calcs[chat_id]
 
     def info(self, chat_id):
@@ -77,7 +77,7 @@ class BotCalc(TeleBot):
         action(message)
 
 try:
-    from mytoken import TOKEN
+    from telegram.mytoken import TOKEN
 except ModuleNotFoundError:
     TOKEN = '' # enter the token of your bot here
 
@@ -149,6 +149,7 @@ def action(message, calc=None):
 
 @bot.message_handler(content_types=['text'])
 def text_handler(message):
+    bot.logger.debug("text_handler: text = '%s'", message.text)
     chat_id = message.chat.id
     calc = bot.get_calc(chat_id)
 
@@ -184,13 +185,12 @@ def text_handler(message):
             bot.cancel(message)
             return
         else:
-            value = calc.symbolic_expr(expr)
-            calc.values[var] = value
+            calc.set_value(var, expr)
             lines = [f'Новое значение {var} = {value}\n']
             lines.extend(calc.status())
             text = '\n'.join(lines)
 
-    elif calc.delete_variable_mode:
+    elif calc.delete_variable_mode: # TODO: delete this double
         calc.delete_variable_mode = False
         return
 
@@ -208,9 +208,10 @@ def text_handler(message):
 
     else:
         text = calc.set_new_expr(message.text) # None or text of an Error
-        if text is None:
+        if text == "":
             text = '\n'.join(calc.status()) 
 
+    bot.logger.debug("Sending message: '%s'", text)
     bot.send_message(chat_id, text)
 
 if __name__ == '__main__':

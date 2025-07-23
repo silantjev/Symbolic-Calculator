@@ -7,27 +7,40 @@
 
 Автор: А. В. Силантьев
 
-Версия: 2.3
+Версия: 3.0
 
 Файлы:
-minigui.py — мини-графическая версия калькулятора
-ccalc.py — консольная версия
-bot.py — сервис для телеграм-бота (требуется токен)
-symcalc.py — скрипт для запуска
-graph.py — вспомогательный модуль
-symbolic.py — вспомогательный модуль
-gen_calc.py — вспомогательный модуль
-qt_classes.py — вспомогательный модуль для графической версии
-requirements.txt — файл с необходимыми библиотеками
-help_rus.txt — текст с инструкцией использования
-Dockerfile используется для создания образа приложения ccalc
+```plaintext
+.
+├── core
+│   ├── graph.py            — функции для первичного парсинга строки в вычислительный граф
+│   ├── symbolic.py         — класс для перевода в sympy-выражения
+│   ├── calculator.py       — класс-калькулятор
+│   ├── logger.py           — логирование
+│   └── help_rus.txt        — текст с инструкцией использования
+├── console
+│   └── console_calc.py     — консольная версия
+├── gui
+│   ├── minigui.py          — мини-графическая версия калькулятора
+│   ├── qt_classes.py       — вспомогательный модуль для графической версии
+├── telegram
+│   ├── bot.py              — сервис для телеграм-бота (требуется токен)
+│   └── mytoken.py          — здесь секретный токен: TOKEN = ...
+├── Dockerfile              (используется для создания образа консольной версии)
+├── LICENSE
+├── README.md
+├── README_RUS.md
+├── requirements.txt
+├── requirements_console_calc.txt
+└── symcalc.py              — скрипт для запуска
+```
 
 Полная графическая версия находится в разработке
 
 Мой телеграм бот: https://t.me/SymbolicCalculator_bot
 
 Используемые библиотеки:
-os, sys, argparse, sympy=1.11.1, PyQt5=5.15.7, simple_term_menu==1.6.1, pyTelegramBotAPI==4.12.0
+sympy==1.11.1, PyQt5==5.15.7, simple_term_menu==1.6.1, pyTelegramBotAPI==4.12.0
 
 Файлы с расширением py следует запускать программой-интерпретатором:
 python3 ccalc.py
@@ -53,3 +66,5 @@ docker run -it --rm --name ccalc ccalc_image
 
 -Остановка:
 docker stop ccalc
+
+7 directories, 28 files

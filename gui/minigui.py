@@ -29,7 +29,7 @@ class MainMenu(QDialog):
         self.setWindowTitle('Symbolic Calculator')
         self.resize(450, 300)
 
-        self.input_text = QLE(calc.expr, self)
+        self.input_text = QLE(calc.get_expr(), self)
         self.input_text.move(50, 20)
         self.input_text.resize(350, 25)
         self.input_text.returnPressed.connect(self.parse_down)
@@ -43,7 +43,7 @@ class MainMenu(QDialog):
         self.btn_up.move(250, 50)
         self.btn_up.clicked.connect(self.se_up)
 
-        self.se_text = QLE(str(calc.se), self)
+        self.se_text = QLE(str(calc.get_se()), self)
         self.se_text.move(50, 80)
         self.se_text.resize(350, 25)
         self.se_text.editingFinished.connect(self.eval_down)
@@ -56,7 +56,7 @@ class MainMenu(QDialog):
         self.btn_up.move(250, 110)
         self.btn_up.clicked.connect(self.sec_up)
 
-        self.sec_text = QLE(str(calc.sec), self)
+        self.sec_text = QLE(calc.get_sec(), self)
         self.sec_text.move(50, 140)
         self.sec_text.resize(350, 25)
 
@@ -67,12 +67,12 @@ class MainMenu(QDialog):
     def parse_down(self):
         """ parse the input expression to 'se' and evaluate it to 'sec' """
         expr = self.input_text.text()
-        if self.calc.expr == expr:
+        if self.calc.get_expr() == expr:
             return
-        self.calc.expr = expr
+        self.calc.set_expr(expr)
 
         text = self.calc.set_new_expr(expr)
-        if text is not None:
+        if text:
             QMessageBox.warning(self, 'Warning', text)
             return
         # try:
@@ -93,28 +93,27 @@ class MainMenu(QDialog):
 
     def se_up(self):
         """ put 'se' to the top line (input) """
-        expr = str(self.calc.se)
-        self.calc.expr = expr
+        expr = str(self.calc.get_se())
+        self.calc.set_expr(expr)
         self.input_text.setText(expr)
 
     def sec_up(self):
         """ put 'sec' to 'se' """
-        sec_text = str(self.calc.sec)
-        self.calc.se = parse_expr(sec_text)
+        sec_text = str(self.calc.get_sec())
+        self.calc.set_se(sec_text)
         self.se_text.setText(sec_text)
 
     def eval_down(self):
         """ Evaluates 'se' to 'sec' """
         se_new_text = self.se_text.text()
-        if se_new_text != str(self.calc.se):
-            se_new = self.calc.symbolic_expr(se_new_text)
-            self.calc.se = se_new
+        if se_new_text != str(self.calc.get_se()):
+            self.calc.set_se(se_new_text)
 
         sec = self.calc.evaluate()
         if str(sec).find('zoo') != -1 or str(sec).find('nan') != -1:
             QMessageBox.warning(self, 'Warning', 'Деление на 0')
         else:
-            self.calc.sec = sec
+            self.calc.set_sec(sec)
             self.sec_text.setText(str(sec))
 
     # def vars(self):

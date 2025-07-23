@@ -12,7 +12,7 @@ except ImportError:
     from symbolic import Symbolic
 
 
-class Calculator(Symbolic):
+class CalculatorImpl(Symbolic):
     """ Mini GUI version of calculator.
     The inherited method 'symbolic_expr' is used.
     """
@@ -39,7 +39,7 @@ class Calculator(Symbolic):
         """ expr: SymPy expression of the string type """
 
         if logger is None:
-            logger_name = logging.self.__class__.__name__
+            logger_name = self.__class__.__name__
             self.logger = make_logger(name=logger_name, file=False, console=False, level=logging.WARNING)
         else:
             self.logger = logger
@@ -57,17 +57,27 @@ class Calculator(Symbolic):
         self.help_text = ""
         self.load_help_text()
 
+    def symbolic_expr(self, expr):
+        se_new = super().symbolic_expr(expr)
+        if se_new == 'Error':
+            self.logger.error('Unknown Error')
+            raise AssertionError('Неизвестная ошибка')
+        return se_new
+
     def set_new_expr(self, expr):
         expr = expr.replace('_', '(' + str(self.se) + ')')
         try:
             se_new = self.symbolic_expr(expr)
-            if se_new == 'Error':
-                raise AssertionError('Неизвестная ошибка')
+            # if se_new == 'Error':
+                # raise AssertionError('Неизвестная ошибка')
             if str(se_new).find('zoo') != -1 or str(se_new).find('nan') != -1:
+                self.logger.error('Zero Devision Error')
                 raise ZeroDivisionError('Деление на 0')
-            self.se =  se_new
-            return
+            self.se = se_new
+            self.logger.info("New sympy-expression set: se = %s", se_new)
+            return ""
         except (AssertionError, ValueError, TypeError, KeyError, ZeroDivisionError) as exc:
+            self.logger.error("Error while setting new expression: %s", exc)
             return f'Ошибка: {exc}\nПопытайтесь ещё раз.\n'
 
     def get_current_variables(self):
@@ -115,7 +125,7 @@ class Calculator(Symbolic):
         return self.get_nice(value)
 
     def get_nice(self, se=None):
-        if se == None:
+        if se is None:
             se = self.se
 
         if isinstance(se, Float):
@@ -125,7 +135,7 @@ class Calculator(Symbolic):
 
     def evaluate(self):
         """ Evaluates 'se' """
-        subs_list = [(k,v) for k, v in self.values.items()]
+        subs_list = list(self.values.items())
         # subs_string = self.current_values()
         # if subs_string:
             # subs_string = ', где ' + subs_string
@@ -133,6 +143,7 @@ class Calculator(Symbolic):
         digits = self.options['digits']
         sec = sec.evalf(digits)
         sec = self.dec_round(sec)
+        self.logger.info("Sympy-expression (se = %s) evaluated and ronded to %d digits: sec = %s", self.se, digits, sec)
         return sec
 
     def get_variables(self, include_unset=True):
@@ -163,22 +174,77 @@ class Calculator(Symbolic):
         return self.help_text
 
     def load_help_text(self):
-        CORE_DIR = Path(__file__).resolve().parent
-        path = CORE_DIR / 'help_rus.txt'
+        core_dir = Path(__file__).resolve().parent
+        path = core_dir / 'help_rus.txt'
         if path.exists():
             try:
                 with open(path, 'r', encoding='utf-8') as file:
                     self.help_text = file.read()
             except IOError as e:
-                self.logger.warning("Не удалось открыть файл '%s'", path)
+                self.logger.warning("Failed to open file '%s'. Error: %s", path, e)
                 print("Не удалось открыть файл '%s'" % path)
         else:
-            print("Не удалось найти файл '%s'" % path)
+            self.logger.warning("File %s not found", path)
 
         if self.help_text == "":
             self.help_text = "Справка не загрузилась"
                 
 
+class Calculator(CalculatorImpl):
+    """ API for CalculatorImpl """
+    def set_se(self, expr):
+        expr = str(expr)
+        self.se = parse_expr(expr)
+        self.logger.info("Sympy-expression set: se = %s", self.se)
 
+    def set_option(self, k, val):
+        try:
+            val = int(val)
+            if val == self.options[k]:
+                self.logger.debug("Trying to set the same value %d to option %s", val, k)
+                return True
+            if val > 1:
+                self.options[k] = val
+                self.logger.debug("Option %s set to value %d", k, val)
+                return True
+            self.logger.warning("Wrong value of %s. The value should be positive but %d is given", k, val)
+        except TypeError:
+            self.logger.warning("Wrong type of the value of %s. The type is %s, but int is needed", k, type(val))
+        return False
 
+    def set_expr(self, expr):
+        self.expr = expr
+        self.logger.info("New expression set: expr = %s", expr)
+
+    def set_sec(self, sec):
+        self.sec = sec
+        self.logger.info("Field 'sec' set: sec = %s", sec)
+
+    def set_value(self, var, expr):
+        value = self.symbolic_expr(expr)
+        self.values[var] = value
+        self.logger.info("Value of %s set to %s", var, value)
+
+    def delete_values(self):
+        self.values = {}
+        self.logger.info("Values of all variables deleted")
+
+    def delete_value(self, var):
+        self.values.pop(var)
+        self.logger.info("Values of variable %s deleted", var)
+
+    def get_expr(self):
+        return self.expr
+
+    def get_sec(self):
+        return str(self.sec)
+
+    def get_se(self):
+        return self.se
+
+    def get_var_names(self):
+        return self.values.keys()
+
+    def get_options(self):
+        return self.options
 
