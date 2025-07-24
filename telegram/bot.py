@@ -1,3 +1,4 @@
+import argparse
 import sys
 from pathlib import Path
 from telebot import TeleBot
@@ -36,7 +37,7 @@ class BotCalc(TeleBot):
         super().__init__(token)
         self.logger = logger
         self.calcs = dict()
-        self.logger.info("Tegram bot enabled")
+        self.logger.info("Tegram bot launched")
 
     def get_calc(self, chat_id, restart=False):
         """ Gets calulator for the chat
@@ -68,7 +69,7 @@ class BotCalc(TeleBot):
         /info, /i — данная справка
         /help, /h — справка о формате вводимых выражений
         """
-        bot.send_message(chat_id, text)
+        self.send_message(chat_id, text)
 
     def cancel(self, message):
         text = 'Отмена\n'
@@ -81,7 +82,21 @@ try:
 except ModuleNotFoundError:
     TOKEN = '' # enter the token of your bot here
 
-logger = make_logger(name="telegram_bot", file=True, console=True)
+if not TOKEN:
+    TOKEN = input("Токен не найден. Введите токен своего телеграм-бота: ")
+
+if not TOKEN:
+    raise ValueError("Put your token to variable TOKEN in telegram/token.py")
+
+parser = argparse.ArgumentParser(description=f'Символьный калькулятор: телеграм-бот', add_help=False)
+
+parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='показать справку и выйти')
+parser.add_argument('-l', action='store_true', help='логировать в консоль')
+parser.add_argument('-f', action='store_true', help='логировать в файл')
+
+args = parser.parse_args()
+
+logger = make_logger(name="telegram_bot", file=args.f, console=args.l)
 bot = BotCalc(TOKEN, logger=logger)
 
 @bot.message_handler(commands=['info', 'help', 'h'])
@@ -156,20 +171,21 @@ def text_handler(message):
     if calc.change_variable_mode:
         calc.change_variable_mode = False
         var =  message.text
-        if var == '/':
+        if not var or var[0] == '/':
             bot.cancel(message)
             return
-        else:
-            calc.input_variable = var
-            text = f'Введите значение переменной {var}\n(для отмены введите "/"):'
+
+        calc.input_variable = var
+        text = f'Введите значение переменной {var}\n(для отмены введите "/"):'
 
     elif calc.delete_variable_mode:
         calc.delete_variable_mode = False
         var =  message.text
-        if var == '/':
+        if not var or var[0] == '/':
             bot.cancel(message)
             return
-        elif var not in calc.values:
+
+        if var not in calc.values:
             lines = [f'Переменная {var} отсутствует\n']
         else:
             calc.values.pop(var)
@@ -181,18 +197,14 @@ def text_handler(message):
         var = calc.input_variable
         calc.input_variable = None
         expr = message.text
-        if expr == '/':
+        if not expr or expr[0] == '/':
             bot.cancel(message)
             return
-        else:
-            calc.set_value(var, expr)
-            lines = [f'Новое значение {var} = {value}\n']
-            lines.extend(calc.status())
-            text = '\n'.join(lines)
 
-    elif calc.delete_variable_mode: # TODO: delete this double
-        calc.delete_variable_mode = False
-        return
+        calc.set_value(var, expr)
+        lines = [f'Новое значение {var} = {expr}\n']
+        lines.extend(calc.status())
+        text = '\n'.join(lines)
 
     elif message.text == '/':
         message.text = '/status'

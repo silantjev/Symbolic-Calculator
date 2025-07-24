@@ -1,5 +1,4 @@
-# Symbolic calculator 2.0
-# Console version
+# Console version for application or client
 
 import sys
 from pathlib import Path
@@ -9,7 +8,6 @@ from simple_term_menu import TerminalMenu
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from core.calculator import Calculator
 from core.logger import make_logger
 
 
@@ -17,24 +15,13 @@ class CCalculator:
     """ Console version of calculator.
     """
 
-    # Attributes: TODO
+    # Attributes:
 
-    # se: current expression as a SymPy object
+    # calc: Union[Calculator, CalcClient]
 
-    # values: is a dict of their values {'x': value}, where value is a number
-    # (if a variable 'x' does not have a value, then we output it as an abstract variable)
-
-    # options: values of options
-
-    # explanations: description of options (a constant)
-
-    # Options:
-    # digits: means the number of digits, which are shown by evaluation
-
-    def __init__(self, expr='0', logger=None):
+    def __init__(self, calc):
         """ expr: SymPy expression of the string type """
-        self.calc = Calculator(expr, logger=logger)
-        self.explanations = self.calc.explanations
+        self.calc = calc
 
     def main_menu(self, expr=None):
         """ Запуск приложения """
@@ -94,7 +81,7 @@ class CCalculator:
     def change_options(self):
         print('Опции:')
         for k, v in self.calc.get_options().items():
-            print(f'\t{self.explanations[k]}: {k} = {v}')
+            print(f'\t{self.calc.get_explanations()[k]}: {k} = {v}')
             val = input('Введите новое значение опции\n(для отмены нажмите Enter): ')
             if val:
                 ok = self.calc.set_option(k, val)
@@ -150,7 +137,7 @@ class CCalculator:
                     continue
                 ch = choice[0]
                 if ch in 'yд':
-                    self.calc.delete_values()
+                    self.calc.delete_all_values()
                     return False
                 if ch in 'nн':
                     return False
@@ -200,15 +187,5 @@ class CCalculator:
                 break
 
             print(text)  # Error — let's repeat
-
-def main(log_file=True, log_console=True):
-    logger = make_logger(name="console", file=log_file, console=log_console)
-    ccalcul = CCalculator(logger=logger)
-    expr = '0'
-    ccalcul.main_menu(expr)
-
-
-if __name__ == '__main__':
-    main()
 
 

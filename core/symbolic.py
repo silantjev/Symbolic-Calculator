@@ -1,12 +1,14 @@
 # This module contains functions (realised as methods)
 # that transform the input string to SymPy expression
+import sys
+from pathlib import Path
 
 from sympy import * # pylint: disable=wildcard-import, unused-wildcard-import
 
-try:
-    from .graph import make_graph, cleaning, splitting_comma
-except ImportError:
-    from graph import make_graph, cleaning, splitting_comma
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from core.graph import make_graph, cleaning, splitting_comma
 
 # abs = globals()['Abs']
 # min = globals()['Min']
@@ -23,6 +25,10 @@ class Symbolic:
 # Attributes
 # variables: dict of variables {'x': sympy.Symbol('x'), ...},
 # graph: calculation graph made by the function 'make_graph'
+
+    def __init__(self):
+        self.variables = {}
+        self.graph = {}
 
 
     def sumprod(self, args, sign):

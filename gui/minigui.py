@@ -1,27 +1,18 @@
-# Symbolic calculator 2.0
 # Mini-GUI version
 # Under development...
 
-from pathlib import Path
 import sys
+from pathlib import Path
 from PyQt5.QtWidgets import * # pylint: disable=wildcard-import, unused-wildcard-import
-from PyQt5.QtCore import Qt
-from sympy import * # pylint: disable=wildcard-import, unused-wildcard-import TODO:delete
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from core.calculator import Calculator
 from core.logger import make_logger
-
-# from qt_classes import Vars
-try:
-    from .qt_classes import QLE
-except ImportError:
-    from qt_classes import QLE
+from gui.qt_classes import QLE
 
 
-class MainMenu(QDialog):
+class MainWin(QDialog):
     """ Realises gui interface """
     def __init__(self, calc):
         self.calc = calc # an instance of the class Calculator
@@ -71,9 +62,9 @@ class MainMenu(QDialog):
             return
         self.calc.set_expr(expr)
 
-        text = self.calc.set_new_expr(expr)
-        if text:
-            QMessageBox.warning(self, 'Warning', text)
+        error = self.calc.set_new_expr(expr)
+        if error:
+            QMessageBox.warning(self, 'Warning', error)
             return
         # try:
             # se_new = self.calc.symbolic_expr(expr)
@@ -100,14 +91,20 @@ class MainMenu(QDialog):
     def sec_up(self):
         """ put 'sec' to 'se' """
         sec_text = str(self.calc.get_sec())
-        self.calc.set_se(sec_text)
+        error = self.calc.set_se(sec_text)
+        if error:
+            QMessageBox.warning(self, 'Warning', error)
+            return
         self.se_text.setText(sec_text)
 
     def eval_down(self):
         """ Evaluates 'se' to 'sec' """
         se_new_text = self.se_text.text()
         if se_new_text != str(self.calc.get_se()):
-            self.calc.set_se(se_new_text)
+            error = self.calc.set_se(se_new_text)
+            if error:
+                QMessageBox.warning(self, 'Warning', error)
+                return
 
         sec = self.calc.evaluate()
         if str(sec).find('zoo') != -1 or str(sec).find('nan') != -1:
@@ -120,18 +117,3 @@ class MainMenu(QDialog):
         # var_dialog = Vars(parent=self, calc=self.calc)
         # var_dialog.setWindowTitle('Variables')
         # var_dialog.show()
-
-
-
-def main(log_file=True, log_console=True):
-    expr = '0'
-    app = QApplication(sys.argv)  # create application
-    logger = make_logger(name="minigui", file=log_file, console=log_console)
-    calc = Calculator(expr, logger=logger)
-    menu = MainMenu(calc)
-    menu.show()
-    sys.exit(app.exec_())  # execute the application
-
-
-if __name__ == '__main__':
-    main()

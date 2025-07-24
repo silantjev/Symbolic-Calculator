@@ -9,7 +9,7 @@
 
 Версия: 3.0
 
-Файлы:
+## Файлы:
 ```plaintext
 .
 ├── core
@@ -18,21 +18,31 @@
 │   ├── calculator.py       — класс-калькулятор
 │   ├── logger.py           — логирование
 │   └── help_rus.txt        — текст с инструкцией использования
+├── web
+│   ├── api_service.py      — web-сервис калькулятора
+│   ├── pyd_models.py       — pydantic-модели для сервиса
+│   └── calc_client.py      — клиент-калькулятор для взаимодействия с сервисом
 ├── console
-│   └── console_calc.py     — консольная версия
+│   ├── console_calc.py     — консольная версия калькулятора
+│   ├── console_app.py      — запуск консольной версии
+│   └── console_client.py   — запуск консольной версии как клиента
 ├── gui
 │   ├── minigui.py          — мини-графическая версия калькулятора
 │   ├── qt_classes.py       — вспомогательный модуль для графической версии
+│   ├── minigui_app.py      — запуск мини-графической версии
+│   └── minigui_client.py   — запуск мини-графической версии как клиента
 ├── telegram
 │   ├── bot.py              — сервис для телеграм-бота (требуется токен)
 │   └── mytoken.py          — здесь секретный токен: TOKEN = ...
 ├── Dockerfile              (используется для создания образа консольной версии)
 ├── LICENSE
 ├── README.md
-├── README_RUS.md
 ├── requirements.txt
 ├── requirements_console_calc.txt
-└── symcalc.py              — скрипт для запуска
+├── run_client.py           — скрипт для запуска (mini)-gui/консольной версии как клиента
+├── run_tegram_bot.sh       — скрипт для запуска телеграм бота
+├── run_web_service.sh      — скрипт для запуска сервиса
+└── symcalc.py              — скрипт для запуска (mini)-gui/консольной версии
 ```
 
 Полная графическая версия находится в разработке
@@ -40,31 +50,71 @@
 Мой телеграм бот: https://t.me/SymbolicCalculator_bot
 
 Используемые библиотеки:
-sympy==1.11.1, PyQt5==5.15.7, simple_term_menu==1.6.1, pyTelegramBotAPI==4.12.0
+sympy==1.11.1, PyQt5==5.15.7, simple_term_menu==1.6.1, pyTelegramBotAPI==4.12.0, fastapi==0.116.1, uvicorn==0.35.0
 
-Файлы с расширением py следует запускать программой-интерпретатором:
-python3 ccalc.py
-или
-python ccalc.py
+## Установка
 
 Для установки Python см. https://www.python.org/downloads/
 На ubuntu:
+```bash
 sudo apt-get install python3
+```
+Рекоммендуется использовать Python 3.10
 
 Также необходимо установить модули:
-pip install sympy PyQt5 simple_term_menu
-или
+```bash
 pip install -r requirements.txt
+```
 
-Команды для docker.
+## Запуск
+Для запуска можно использовать скрипты, находящиеся в корне.
 
--Создание образа:
+### монолитный вариант
+Запустить без использования клиент-сервисной системы можно командой
+```bash
+./symcalc.py [-m] [-c] [-l] [-f]
+```
+со следующими опциями:
+
+ - "`-m`" — mini-gui-версия (по умолчанию)
+ - "`-c`" — консольная версия
+ - "`-l`" — логирование в консоль (для дебага)
+ - "`-f`" — логирование в файл в папке `logs/` (для дебага)
+
+### клиент-сервисный вариант
+Так же можно использовать клиент-сервисную систему:
+
+ - один раз запускается сервер:
+```bash
+./run_web_service.sh [--host HOST] [--port PORT] [--reload]
+```
+ - когда нужно запускается клиент:
+```bash
+./run_client.py [-m] [-c] [-l] [-f] [--host HOST] [--port PORT]
+```
+с теми же хостом HOST и портом PORT
+
+### telegram-вариант
+Ещё есть версия в виде telegram-бота. Для её использования нужно создать бот в telegram. Прописать секретный токен этого бота строчкой вида
+```py
+TOKEN = 'my-sectet-token'
+```
+в файл `telegram/mytoken.py`. Затем запустить бот-сервис командой
+```bash
+./run_tegram_bot.sh [-l] [-f]
+```
+
+## Команды для docker:
+
+ - Создание образа:
+```bash
 docker build -t ccalc_image .
-
--Запуск:
+```
+ - Запуск:
+```bash
 docker run -it --rm --name ccalc ccalc_image
-
--Остановка:
+```
+ - Остановка:
+```bash
 docker stop ccalc
-
-7 directories, 28 files
+```
