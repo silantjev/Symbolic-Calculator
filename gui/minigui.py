@@ -8,15 +8,27 @@ from PyQt5.QtWidgets import * # pylint: disable=wildcard-import, unused-wildcard
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from core.logger import make_logger
+from core.session_storage import JSONStorage, StateManager, ClientStateManager
+from core.calculator import Calculator
+from web.calc_client import CalcClient
 from gui.qt_classes import QLE
 
 
 class MainWin(QDialog):
     """ Realises gui interface """
-    def __init__(self, calc):
-        self.calc = calc # an instance of the class Calculator
+    def __init__(self, calc, conf_path=""):
+        self.calc = calc
+        if isinstance(self.calc, Calculator):
+            storage = JSONStorage(json_path=conf_path)
+            self.state_manager = StateManager(storage=storage, logger=self.calc.logger)
+            self.state_manager.load_state(self.calc)
+        elif isinstance(self.calc, CalcClient):
+            self.state_manager = ClientStateManager()
+        else:
+            raise TypeError(f"Acceptable types of calc are Calculator and CalcClient, not {type(calc)}")
+
         super().__init__()
+
         self.setWindowTitle('Symbolic Calculator')
         self.resize(450, 300)
 
@@ -54,6 +66,15 @@ class MainWin(QDialog):
         # self.btn_var = QPushButton('Переменные', self)
         # self.btn_var.move(70, 170)
         # self.btn_var.clicked.connect(self.vars)
+
+    def closeEvent(self, event):
+        """ Called when the window are closing """
+        self.state_manager.save_state(self.calc)
+        super().closeEvent(event)
+
+    def reject(self):
+        self.state_manager.save_state(self.calc)
+        super().reject()
 
     def parse_down(self):
         """ parse the input expression to 'se' and evaluate it to 'sec' """

@@ -16,8 +16,11 @@ def main(log_console=False, log_file=True):
     logger = make_logger(name="console", file=log_file, console=log_console)
     calc = Calculator(logger=logger)
     ccalc = CCalculator(calc=calc)
-    expr = '0'
-    ccalc.main_menu(expr)
+    try:
+        ccalc.main_menu()
+    except KeyboardInterrupt:
+        ccalc.calc.logger.info("Interrupted by Keyboard")
+        ccalc.state_manager.save_state(ccalc.calc)
 
 
 if __name__ == '__main__':

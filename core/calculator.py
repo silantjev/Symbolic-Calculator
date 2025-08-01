@@ -32,6 +32,7 @@ class Calculator(Symbolic):
     # Options:
     # digits: means the number of digits, which are shown by evaluation
 
+    DEFAULT_OPTIONS =  {'digits': 8}
     def __init__(self, expr='0', logger=None):
         """ expr: SymPy expression of the string type """
         super().__init__()
@@ -49,7 +50,7 @@ class Calculator(Symbolic):
         self.se = parse_expr(expr) # SymPy parser 'parse_expr' is used
         self.sec = self.se # SymPy Expression Calculated
         self.values = {}
-        self.options = {'digits': 8}
+        self.options = self.DEFAULT_OPTIONS
         self.explanations = {'digits': 'Точность вычисления в количестве цифр'}
         self.help_text = ""
         self._load_help_text()
@@ -257,3 +258,24 @@ class Calculator(Symbolic):
 
     def get_help_text(self) -> str:
         return self.help_text
+
+    def get_session(self):
+        session_data = {}
+        session_data['expr'] = str(self.expr)
+        session_data['se'] = str(self.se)
+        session_data['sec'] = str(self.sec)
+        session_data['options'] = self.options
+        session_data['values'] = self.values
+        return session_data
+    
+    def load_state(self, data):
+        self.set_expr(data['expr'])
+        self.set_se(data['se'])
+        self.set_sec(data['sec'])
+        self.options = data['options']
+        for var, value in data.get('values', {}).items():
+            self.set_value(var, value)
+
+    def clear_all(self):
+        data = {'expr': '0', 'se': '0', 'sec': '0', 'options': self.DEFAULT_OPTIONS}
+        self.load_state(data)

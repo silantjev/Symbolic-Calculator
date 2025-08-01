@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT))
 
 from core.calculator import Calculator
 from core.logger import make_logger
+from core.session_storage import JSONStorage, StateManager
 
 class BCalculator(Calculator):
     """ bot-calculator """
@@ -31,12 +32,13 @@ class BCalculator(Calculator):
         return lines
 
 
-
 class BotCalc(TeleBot):
-    def __init__(self, token, logger):
+    def __init__(self, token, logger, conf_path=""):
         super().__init__(token)
         self.logger = logger
         self.calcs = dict()
+        storage = JSONStorage(json_path=conf_path)
+        self.state_manager = StateManager(storage=storage, logger=self.logger)
         self.logger.info("Tegram bot launched")
 
     def get_calc(self, chat_id, restart=False):
@@ -48,6 +50,7 @@ class BotCalc(TeleBot):
 
         if chat_id not in self.calcs:
             self.calcs[chat_id] = BCalculator(logger=self.logger) # separate calculator for each chat with initial expr='0'
+            self.state_manager.load_state(calc=self.calcs[chat_id], session_id=chat_id)
             self.logger.info("Bot added some chat")
         return self.calcs[chat_id]
 
@@ -68,6 +71,8 @@ class BotCalc(TeleBot):
         /restart — перезапустить
         /info, /i — данная справка
         /help, /h — справка о формате вводимых выражений
+        /save — сохранить состояние и опции
+        /crear — полная отчистка
         """
         self.send_message(chat_id, text)
 
@@ -76,6 +81,19 @@ class BotCalc(TeleBot):
         self.send_message(message.chat.id, text)
         message.text = '/status'
         action(message)
+
+    def save(self, chat_id):
+        self.state_manager.save_state(self.calcs[chat_id], session_id=chat_id)
+        self.logger.info("State of chat %s saved", chat_id)
+
+    def save_all(self):
+        for chat_id in self.calcs:
+            self.save(chat_id)
+
+    def load(self, chat_id):
+        self.state_manager.load_state(self.calcs[chat_id], session_id=chat_id)
+        self.logger.info("State loaded for chat %s", chat_id)
+
 
 try:
     from telegram.mytoken import TOKEN
@@ -93,11 +111,12 @@ parser = argparse.ArgumentParser(description=f'Символьный кальку
 parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='показать справку и выйти')
 parser.add_argument('-l', action='store_true', help='логировать в консоль')
 parser.add_argument('-f', action='store_true', help='логировать в файл')
+parser.add_argument('--conf', type=str, default="", help='логировать в файл')
 
 args = parser.parse_args()
 
 logger = make_logger(name="telegram_bot", file=args.f, console=args.l)
-bot = BotCalc(TOKEN, logger=logger)
+bot = BotCalc(TOKEN, logger=logger, conf_path=args.conf)
 
 @bot.message_handler(commands=['info', 'help', 'h'])
 def info(message):
@@ -109,6 +128,20 @@ def info(message):
         bot.info(chat_id)
     elif s1 == 'h':
         bot.send_message(chat_id, bot.calcs[chat_id].get_help_text())
+
+@bot.message_handler(commands=['save'])
+def save_state(message):
+    chat_id = message.chat.id
+    bot.get_calc(chat_id, restart=False)
+    bot.save(chat_id)
+    bot.send_message(chat_id, "State saved")
+
+@bot.message_handler(commands=['clear'])
+def clear(message):
+    chat_id = message.chat.id
+    calc = bot.get_calc(chat_id, restart=False)
+    calc.clear_all()
+    bot.send_message(chat_id, "State cleared")
 
 @bot.message_handler(commands=['restart'])
 def restart(message):
@@ -227,4 +260,11 @@ def text_handler(message):
     bot.send_message(chat_id, text)
 
 if __name__ == '__main__':
-    bot.polling()
+    try:
+        bot.polling()
+    except KeyboardInterrupt:
+        bot.logger.info("Interrupted by Keyboard")
+    # except Exception as exc:
+        # bot.logger.error("Error: %s", exc)
+    finally:
+        bot.save_all()

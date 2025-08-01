@@ -13,7 +13,7 @@ export CONSOLE_LOGGING="no"
 export FILE_LOGGING="no"
 
 # Обработка аргументов командной строки
-while getopts ":-:hlf" opt; do
+while getopts ":-:p:hlf" opt; do
   case "$opt" in
     h)
         echo "Usage: $0 [--host HOST] [--port PORT] [--reload] [<other uvicorn options: try 'uvicorn --help' for details>]"
@@ -21,6 +21,7 @@ while getopts ":-:hlf" opt; do
     ;;
     l) export CONSOLE_LOGGING="yes" ;;
     f) export FILE_LOGGING="yes" ;;
+    p) export CONF_PATH="${OPTARG}" ;; 
     -) 
         case $OPTARG in 
             # host=*) host="${OPTARG#*=}" ;;
@@ -56,8 +57,11 @@ fi
 
 # Удаляем -l и -f
 new_args=()
+skip="no"
 for arg in "$@"; do
+    [[ $skip == "yes" ]] &&{ skip="no"; continue; }
     [[ $arg == "-l" || $arg == "-f" ]] && continue
+    [[ $arg == "-p" ]] && { skip="yes"; continue; }
     new_args+=("$arg")
 done
 

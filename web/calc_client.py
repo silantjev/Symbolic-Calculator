@@ -198,6 +198,22 @@ class CalcClient:
         out_json = self.get(endpoint="evaluate")
         return out_json["expr"]
 
+    def clear_all(self):
+        self.delete(endpoint="clear_all")
+        self.logger.info("State cleared")
+
+    def save_state(self, session_id):
+        response = requests.post(
+                f"{self.base_url}/calc/save_state",
+                params={"session_id": session_id},
+                timeout=5,
+            )
+
+        if response.status_code != 200:
+            self.logger.error("Error while getting full sate. Status code: %s. Details: %s", response.status_code, response.text)
+            raise requests.HTTPError(f"Bad status code {response.status_code}: {response.json()}")
+
+
 if __name__ == '__main__':
     logger = make_logger(name="console", file=True, console=True, level=logging.DEBUG)
     calc = CalcClient(logger=logger)

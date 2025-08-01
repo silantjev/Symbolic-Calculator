@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT))
 
 from core.calculator import Calculator
 from core.logger import make_logger
+from core.session_storage import JSONStorage, StateManager
 from web.pyd_models import Expression, GetVariablesOutput, State, FullState, read_state
 
 
@@ -19,10 +20,20 @@ file_logging = os.environ.get("FILE_LOGGING", "yes")
 log_console = (console_logging != "no")
 log_file = (file_logging != "no")
 
+conf_path = os.environ.get("CONF_PATH", "")
+
 logger = make_logger(name="web", console=log_console, file=log_file)
 calc = Calculator(logger=logger)
+storage = JSONStorage(json_path=conf_path)
+state_manager = StateManager(storage, logger)
+
+state_manager.load_state(calc)
 
 app = FastAPI()
+
+@app.on_event("shutdown")
+def shutdown_event():
+    state_manager.save_state(calc)
 
 @app.get("/calc/get_state")
 def get_state(full: bool) -> FullState:
@@ -87,6 +98,10 @@ def set_new_expr(data: Expression) -> State:
     
     return read_state(calc)
 
+@app.post("/calc/save_state")
+def set_new_expr(session_id: int) -> None:
+    state_manager.save_state(calc, session_id=session_id)
+
 @app.delete("/calc/delete_all_values")
 def delete_all_values() -> State:
     calc.delete_all_values()
@@ -97,6 +112,11 @@ def delete_all_values() -> State:
 def delete_value(var: str) -> State:
     calc.delete_value(var)
     
+    return read_state(calc)
+
+@app.delete("/calc/clear_all")
+def clear_all() -> State:
+    calc.clear_all()
     return read_state(calc)
 
 if __name__ == "__main__":

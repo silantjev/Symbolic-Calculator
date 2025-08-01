@@ -8,7 +8,9 @@ from simple_term_menu import TerminalMenu
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from core.logger import make_logger
+from core.session_storage import JSONStorage, StateManager, ClientStateManager
+from core.calculator import Calculator
+from web.calc_client import CalcClient
 
 
 class CCalculator:
@@ -19,12 +21,20 @@ class CCalculator:
 
     # calc: Union[Calculator, CalcClient]
 
-    def __init__(self, calc):
+    def __init__(self, calc, conf_path=""):
         """ expr: SymPy expression of the string type """
         self.calc = calc
+        if isinstance(calc, Calculator):
+            storage = JSONStorage(json_path=conf_path)
+            self.state_manager = StateManager(storage=storage, logger=self.calc.logger)
+        elif isinstance(calc, CalcClient):
+            self.state_manager = ClientStateManager()
+        else:
+            raise TypeError(f"Acceptable types of calc are Calculator and CalcClient, not {type(calc)}")
 
     def main_menu(self, expr=None):
         """ Запуск приложения """
+        self.state_manager.load_state(self.calc)
         if expr is not None:
             self.calc.set_se(expr)
 
@@ -44,38 +54,47 @@ class CCalculator:
                 'Удалить значение всех переменных',
                 'Показать справку',
                 'Изменить опции',
+                'Сохранить состояние',
+                'Полная отчистка'
             ]
             terminal_menu = TerminalMenu(menu, clear_menu_on_exit=True)
             ch = terminal_menu.show()
             print()
 
             if ch == 0 or ch is None:
+                self.state_manager.save_state(self.calc)
                 break
             
             if ch == 1:
                 self.new_expr()
 
-            if ch == 2:
+            elif ch == 2:
                 self.evaluate()
 
-            if ch == 3:
+            elif ch == 3:
                 c = True
                 while c:
                     c = self.change_values()
 
-            if ch == 4:
+            elif ch == 4:
                 c = True
                 while c:
                     c = self.delete_values()
             
-            if ch == 5:
+            elif ch == 5:
                 self.delete_values(delete_all=True)
 
-            if ch == 6:
+            elif ch == 6:
                 self.show_help()
 
-            if ch == 7:
+            elif ch == 7:
                 self.change_options()
+
+            elif ch == 8:
+                self.state_manager.save_state(self.calc)
+
+            elif ch == 9:
+                self.calc.clear_all()
 
 
     def change_options(self):
