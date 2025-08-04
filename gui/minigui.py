@@ -19,8 +19,8 @@ class MainWin(QDialog):
     def __init__(self, calc, conf_path=""):
         self.calc = calc
         if isinstance(self.calc, Calculator):
-            storage = JSONStorage(json_path=conf_path)
-            self.state_manager = StateManager(storage=storage, logger=self.calc.logger)
+            storage = JSONStorage(logger=self.calc.logger, json_path=conf_path)
+            self.state_manager = StateManager(storage=storage)
             self.state_manager.load_state(self.calc)
         elif isinstance(self.calc, CalcClient):
             self.state_manager = ClientStateManager()

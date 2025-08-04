@@ -9,8 +9,9 @@ def make_logger(name, file=True, console=True, level=logging.INFO, log_dir=LOGDI
     logger.handlers.clear()
     logger.setLevel(level)
     if file:
-        assert log_dir.is_dir()
         log_dir = Path(log_dir)
+        if not log_dir.is_dir():
+            log_dir.mkdir()
         log_dir.mkdir(exist_ok=True)
         fh = logging.FileHandler(log_dir/ f'{name}.log', 'a')
         datefmt = '%Y-%m-%d %H:%M:%S'

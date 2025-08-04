@@ -25,8 +25,8 @@ class CCalculator:
         """ expr: SymPy expression of the string type """
         self.calc = calc
         if isinstance(calc, Calculator):
-            storage = JSONStorage(json_path=conf_path)
-            self.state_manager = StateManager(storage=storage, logger=self.calc.logger)
+            storage = JSONStorage(logger=self.calc.logger, json_path=conf_path)
+            self.state_manager = StateManager(storage=storage)
         elif isinstance(calc, CalcClient):
             self.state_manager = ClientStateManager()
         else:
@@ -182,6 +182,7 @@ class CCalculator:
             input('Нажмите Enter')
             return
 
+        self.calc.set_sec(sec)
         while True:
             choice = input('Сохранить как текущее (y/n — да/нет): ')
             if choice == "":
@@ -203,6 +204,7 @@ class CCalculator:
             text = self.calc.set_new_expr(expr)
 
             if text == "":
+                self.calc.set_expr(expr)
                 break
 
             print(text)  # Error — let's repeat

@@ -17,11 +17,13 @@
 │   ├── symbolic.py         — класс для перевода в sympy-выражения
 │   ├── calculator.py       — класс-калькулятор
 │   ├── logger.py           — логирование
+│   ├── session_storage.py  — сохранение состояния
 │   └── help_rus.txt        — текст с инструкцией использования
 ├── web
 │   ├── api_service.py      — web-сервис калькулятора
 │   ├── pyd_models.py       — pydantic-модели для сервиса
-│   └── calc_client.py      — клиент-калькулятор для взаимодействия с сервисом
+│   ├── calc_client.py      — клиент-калькулятор для взаимодействия с сервисом
+│   └── run_client.py       — запуск клиента
 ├── console
 │   ├── console_calc.py     — консольная версия калькулятора
 │   ├── console_app.py      — запуск консольной версии
@@ -39,10 +41,11 @@
 ├── README.md
 ├── requirements.txt
 ├── requirements_console_calc.txt
-├── run_client.py           — скрипт для запуска (mini)-gui/консольной версии как клиента
+├── symcalc.py              — запуск (mini)-gui/консольной версии
+├── run_symcalc.sh          — скрипт для запуска (mini)-gui/консольной версии
+├── run_client.sh           — скрипт для запуска клиента
 ├── run_tegram_bot.sh       — скрипт для запуска телеграм бота
-├── run_web_service.sh      — скрипт для запуска сервиса
-└── symcalc.py              — скрипт для запуска (mini)-gui/консольной версии
+└── run_web_service.sh      — скрипт для запуска сервиса
 ```
 
 Полная графическая версия находится в разработке
@@ -59,7 +62,7 @@ sympy==1.11.1, PyQt5==5.15.7, simple_term_menu==1.6.1, pyTelegramBotAPI==4.12.0,
 ```bash
 sudo apt-get install python3
 ```
-Рекоммендуется использовать Python 3.10
+Рекомендуется использовать Python 3.10 и виртуальное окружение .venv
 
 Также необходимо установить модули:
 ```bash
@@ -67,12 +70,13 @@ pip install -r requirements.txt
 ```
 
 ## Запуск
-Для запуска можно использовать скрипты, находящиеся в корне.
+Для запуска можно использовать bash-скрипты, находящиеся в корне.
+Скрипты активируют виртуальное окружение .venv автоматически.
 
 ### монолитный вариант
 Запустить без использования клиент-сервисной системы можно командой
 ```bash
-./symcalc.py [-m] [-c] [-l] [-f]
+./run_symcalc.sh [-m] [-c] [-l] [-f]
 ```
 со следующими опциями:
 
@@ -86,13 +90,13 @@ pip install -r requirements.txt
 
  - один раз запускается сервер:
 ```bash
-./run_web_service.sh [--host HOST] [--port PORT] [--reload]
+./run_web_service.sh [-l] [-f] [-p CONF_PATH] [--host HOST] [--port PORT] [--reload]
 ```
  - когда нужно запускается клиент:
 ```bash
-./run_client.py [-m] [-c] [-l] [-f] [--host HOST] [--port PORT]
+./run_client.sh [-m] [-c] [-l] [-f] [--host HOST] [--port PORT]
 ```
-с теми же хостом HOST и портом PORT
+с теми же HOST и PORT
 
 ### telegram-вариант
 Ещё есть версия в виде telegram-бота. Для её использования нужно создать бот в telegram. Прописать секретный токен этого бота строчкой вида

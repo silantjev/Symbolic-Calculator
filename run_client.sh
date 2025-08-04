@@ -13,4 +13,5 @@ if [[ -z "$VIRTUAL_ENV" ]]; then
     fi
 fi
 
-python3 telegram/bot.py "$@"
+python3 web/run_client.py "$@"
+

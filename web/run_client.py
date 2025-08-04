@@ -1,9 +1,13 @@
-#!/bin/python3
 import sys
 import argparse
 import ipaddress
+from pathlib import Path
 
 import requests
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 VERSION = '3.0'
 

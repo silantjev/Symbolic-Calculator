@@ -37,8 +37,8 @@ class BotCalc(TeleBot):
         super().__init__(token)
         self.logger = logger
         self.calcs = dict()
-        storage = JSONStorage(json_path=conf_path)
-        self.state_manager = StateManager(storage=storage, logger=self.logger)
+        storage = JSONStorage(logger=self.logger, json_path=conf_path)
+        self.state_manager = StateManager(storage=storage)
         self.logger.info("Tegram bot launched")
 
     def get_calc(self, chat_id, restart=False):

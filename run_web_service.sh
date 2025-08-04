@@ -1,9 +1,21 @@
 #!/bin/bash
-dir="$(dirname "$0")"
+dir="$(dirname -- "$0")"
+dir="$(realpath -- "$dir")"
+
 cd "$dir"
 
+if [[ -z "$VIRTUAL_ENV" ]]; then
+    VIRTUAL_ENV="$dir"/.venv
+    if [[ -d "$VIRTUAL_ENV" ]];  then
+        source "$VIRTUAL_ENV/bin/activate"
+    else
+        echo Warning: directory $VIRTUAL_ENV not found. Install virtual environment >&2
+    fi
+fi
+
+
 if ! command -v uvicorn &> /dev/null; then
-    echo "Модуль uvicorn не найден Установите зависимости: 'pip install -r requirements.txt'"
+    echo "Module uvicorn not found. Install dependencies: 'pip install -r requirements.txt'"
     exit 1
 fi
 
@@ -12,11 +24,13 @@ port="8000"
 export CONSOLE_LOGGING="no"
 export FILE_LOGGING="no"
 
+help_stirng="Usage: $0 [-l] [-f] [-p CONFIG_PATH] [--host HOST] [--port PORT] [--reload] [<other uvicorn options: try 'uvicorn --help' for details>]"
+
 # Обработка аргументов командной строки
 while getopts ":-:p:hlf" opt; do
   case "$opt" in
     h)
-        echo "Usage: $0 [--host HOST] [--port PORT] [--reload] [<other uvicorn options: try 'uvicorn --help' for details>]"
+        echo $help_stirng
         exit 0
     ;;
     l) export CONSOLE_LOGGING="yes" ;;
@@ -35,7 +49,7 @@ while getopts ":-:p:hlf" opt; do
                 let OPTIND++
             ;;
             help)
-                echo "Usage: $0 [--host HOST] [--port PORT] [--reload] [<other uvicorn options: see 'uvicorn --help' for details>]"
+                echo $help_stirng
                 exit 0
             ;;
         esac

@@ -24,8 +24,8 @@ conf_path = os.environ.get("CONF_PATH", "")
 
 logger = make_logger(name="web", console=log_console, file=log_file)
 calc = Calculator(logger=logger)
-storage = JSONStorage(json_path=conf_path)
-state_manager = StateManager(storage, logger)
+storage = JSONStorage(logger=logger, json_path=conf_path)
+state_manager = StateManager(storage)
 
 state_manager.load_state(calc)
 
@@ -99,7 +99,7 @@ def set_new_expr(data: Expression) -> State:
     return read_state(calc)
 
 @app.post("/calc/save_state")
-def set_new_expr(session_id: int) -> None:
+def save_state(session_id: int) -> None:
     state_manager.save_state(calc, session_id=session_id)
 
 @app.delete("/calc/delete_all_values")
