@@ -1,6 +1,8 @@
 mytoken.py
 __pycache__/
 *.swp
-vars.py
+*vars.py
+.venv
+logs/*
 v1/
 v2/
