@@ -1,27 +1,38 @@
-# Symbolic calculator 2.0
 # Mini-GUI version
 # Under development...
 
-# import os
 import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
-from sympy import * # ?
+from pathlib import Path
+from PyQt5.QtWidgets import * # pylint: disable=wildcard-import, unused-wildcard-import
 
-# from qt_classes import Vars
-from qt_classes import QLE
-from gen_calc import Calculator
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from core.session_storage import JSONStorage, StateManager, ClientStateManager
+from core.calculator import Calculator
+from web.calc_client import CalcClient
+from gui.qt_classes import QLE
 
 
-class MainMenu(QDialog):
+class MainWin(QDialog):
     """ Realises gui interface """
-    def __init__(self, calc):
-        self.calc = calc # an instance of the class Calculator
+    def __init__(self, calc, conf_path=""):
+        self.calc = calc
+        if isinstance(self.calc, Calculator):
+            storage = JSONStorage(logger=self.calc.logger, json_path=conf_path)
+            self.state_manager = StateManager(storage=storage)
+            self.state_manager.load_state(self.calc)
+        elif isinstance(self.calc, CalcClient):
+            self.state_manager = ClientStateManager()
+        else:
+            raise TypeError(f"Acceptable types of calc are Calculator and CalcClient, not {type(calc)}")
+
         super().__init__()
+
         self.setWindowTitle('Symbolic Calculator')
         self.resize(450, 300)
 
-        self.input_text = QLE(calc.expr, self)
+        self.input_text = QLE(calc.get_expr(), self)
         self.input_text.move(50, 20)
         self.input_text.resize(350, 25)
         self.input_text.returnPressed.connect(self.parse_down)
@@ -35,7 +46,7 @@ class MainMenu(QDialog):
         self.btn_up.move(250, 50)
         self.btn_up.clicked.connect(self.se_up)
 
-        self.se_text = QLE(str(calc.se), self)
+        self.se_text = QLE(str(calc.get_se()), self)
         self.se_text.move(50, 80)
         self.se_text.resize(350, 25)
         self.se_text.editingFinished.connect(self.eval_down)
@@ -48,7 +59,7 @@ class MainMenu(QDialog):
         self.btn_up.move(250, 110)
         self.btn_up.clicked.connect(self.sec_up)
 
-        self.sec_text = QLE(str(calc.sec), self)
+        self.sec_text = QLE(calc.get_sec(), self)
         self.sec_text.move(50, 140)
         self.sec_text.resize(350, 25)
 
@@ -56,16 +67,25 @@ class MainMenu(QDialog):
         # self.btn_var.move(70, 170)
         # self.btn_var.clicked.connect(self.vars)
 
+    def closeEvent(self, event):
+        """ Called when the window are closing """
+        self.state_manager.save_state(self.calc)
+        super().closeEvent(event)
+
+    def reject(self):
+        self.state_manager.save_state(self.calc)
+        super().reject()
+
     def parse_down(self):
         """ parse the input expression to 'se' and evaluate it to 'sec' """
         expr = self.input_text.text()
-        if self.calc.expr == expr:
+        if self.calc.get_expr() == expr:
             return
-        self.calc.expr = expr
+        self.calc.set_expr(expr)
 
-        text = self.calc.set_new_expr(expr)
-        if text is not None:
-            QMessageBox.warning(self, 'Warning', text)
+        error = self.calc.set_new_expr(expr)
+        if error:
+            QMessageBox.warning(self, 'Warning', error)
             return
         # try:
             # se_new = self.calc.symbolic_expr(expr)
@@ -85,45 +105,36 @@ class MainMenu(QDialog):
 
     def se_up(self):
         """ put 'se' to the top line (input) """
-        expr = str(self.calc.se)
-        self.calc.expr = expr
+        expr = str(self.calc.get_se())
+        self.calc.set_expr(expr)
         self.input_text.setText(expr)
 
     def sec_up(self):
         """ put 'sec' to 'se' """
-        sec_text = str(self.calc.sec)
-        self.calc.se = parse_expr(sec_text)
+        sec_text = str(self.calc.get_sec())
+        error = self.calc.set_se(sec_text)
+        if error:
+            QMessageBox.warning(self, 'Warning', error)
+            return
         self.se_text.setText(sec_text)
 
     def eval_down(self):
         """ Evaluates 'se' to 'sec' """
         se_new_text = self.se_text.text()
-        if se_new_text != str(self.calc.se):
-            se_new = self.calc.symbolic_expr(se_new_text)
-            self.calc.se = se_new
+        if se_new_text != str(self.calc.get_se()):
+            error = self.calc.set_se(se_new_text)
+            if error:
+                QMessageBox.warning(self, 'Warning', error)
+                return
 
         sec = self.calc.evaluate()
         if str(sec).find('zoo') != -1 or str(sec).find('nan') != -1:
             QMessageBox.warning(self, 'Warning', 'Деление на 0')
         else:
-            self.calc.sec = sec
+            self.calc.set_sec(sec)
             self.sec_text.setText(str(sec))
 
     # def vars(self):
         # var_dialog = Vars(parent=self, calc=self.calc)
         # var_dialog.setWindowTitle('Variables')
         # var_dialog.show()
-
-
-
-def main():
-    expr = '0'
-    app = QApplication(sys.argv)  # create application
-    calc = Calculator(expr)
-    menu = MainMenu(calc)
-    menu.show()
-    sys.exit(app.exec_())  # execute the application
-
-
-if __name__ == '__main__':
-    main()

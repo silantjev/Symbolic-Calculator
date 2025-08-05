@@ -9,4 +9,4 @@ RUN pip install -r requirements_ccalc.txt
 
 COPY . ./
 
-CMD python3 ccalc.py
+CMD python3 console/console_app.py

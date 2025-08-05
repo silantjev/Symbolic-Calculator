@@ -1,8 +1,15 @@
-from gen_calc import Calculator
-
-import os
+import argparse
+import sys
+from pathlib import Path
 from telebot import TeleBot
-from sympy import *
+from sympy import * # pylint: disable=wildcard-import, unused-wildcard-import
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from core.calculator import Calculator
+from core.logger import make_logger
+from core.session_storage import JSONStorage, StateManager
 
 class BCalculator(Calculator):
     """ bot-calculator """
@@ -25,11 +32,14 @@ class BCalculator(Calculator):
         return lines
 
 
-
 class BotCalc(TeleBot):
-    def __init__(self, token):
+    def __init__(self, token, logger, conf_path=""):
         super().__init__(token)
+        self.logger = logger
         self.calcs = dict()
+        storage = JSONStorage(logger=self.logger, json_path=conf_path)
+        self.state_manager = StateManager(storage=storage)
+        self.logger.info("Tegram bot launched")
 
     def get_calc(self, chat_id, restart=False):
         """ Gets calulator for the chat
@@ -39,7 +49,9 @@ class BotCalc(TeleBot):
             self.calcs.pop(chat_id)
 
         if chat_id not in self.calcs:
-            self.calcs[chat_id] = BCalculator() # separate calculator for each chat with initial expr='0'
+            self.calcs[chat_id] = BCalculator(logger=self.logger) # separate calculator for each chat with initial expr='0'
+            self.state_manager.load_state(calc=self.calcs[chat_id], session_id=chat_id)
+            self.logger.info("Bot added some chat")
         return self.calcs[chat_id]
 
     def info(self, chat_id):
@@ -59,8 +71,10 @@ class BotCalc(TeleBot):
         /restart — перезапустить
         /info, /i — данная справка
         /help, /h — справка о формате вводимых выражений
+        /save — сохранить состояние и опции
+        /crear — полная отчистка
         """
-        bot.send_message(chat_id, text)
+        self.send_message(chat_id, text)
 
     def cancel(self, message):
         text = 'Отмена\n'
@@ -68,21 +82,66 @@ class BotCalc(TeleBot):
         message.text = '/status'
         action(message)
 
-try:
-    from mytoken import token
-except ModuleNotFoundError:
-    token = '' # enter the token of your bot here
+    def save(self, chat_id):
+        self.state_manager.save_state(self.calcs[chat_id], session_id=chat_id)
+        self.logger.info("State of chat %s saved", chat_id)
 
-bot = BotCalc(token)
+    def save_all(self):
+        for chat_id in self.calcs:
+            self.save(chat_id)
+
+    def load(self, chat_id):
+        self.state_manager.load_state(self.calcs[chat_id], session_id=chat_id)
+        self.logger.info("State loaded for chat %s", chat_id)
+
+
+try:
+    from telegram.mytoken import TOKEN
+except ModuleNotFoundError:
+    TOKEN = '' # enter the token of your bot here
+
+if not TOKEN:
+    TOKEN = input("Токен не найден. Введите токен своего телеграм-бота: ")
+
+if not TOKEN:
+    raise ValueError("Put your token to variable TOKEN in telegram/token.py")
+
+parser = argparse.ArgumentParser(description=f'Символьный калькулятор: телеграм-бот', add_help=False)
+
+parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='показать справку и выйти')
+parser.add_argument('-l', action='store_true', help='логировать в консоль')
+parser.add_argument('-f', action='store_true', help='логировать в файл')
+parser.add_argument('--conf', type=str, default="", help='логировать в файл')
+
+args = parser.parse_args()
+
+logger = make_logger(name="telegram_bot", file=args.f, console=args.l)
+bot = BotCalc(TOKEN, logger=logger, conf_path=args.conf)
 
 @bot.message_handler(commands=['info', 'help', 'h'])
 def info(message):
     chat_id = message.chat.id
+    if chat_id not in bot.calcs:
+        bot.get_calc(chat_id)
     s1 = message.text[1] # first symbol of the command
     if s1 == 'i':
         bot.info(chat_id)
     elif s1 == 'h':
-        bot.send_message(chat_id, Calculator.get_help_text())
+        bot.send_message(chat_id, bot.calcs[chat_id].get_help_text())
+
+@bot.message_handler(commands=['save'])
+def save_state(message):
+    chat_id = message.chat.id
+    bot.get_calc(chat_id, restart=False)
+    bot.save(chat_id)
+    bot.send_message(chat_id, "State saved")
+
+@bot.message_handler(commands=['clear'])
+def clear(message):
+    chat_id = message.chat.id
+    calc = bot.get_calc(chat_id, restart=False)
+    calc.clear_all()
+    bot.send_message(chat_id, "State cleared")
 
 @bot.message_handler(commands=['restart'])
 def restart(message):
@@ -138,26 +197,28 @@ def action(message, calc=None):
 
 @bot.message_handler(content_types=['text'])
 def text_handler(message):
+    bot.logger.debug("text_handler: text = '%s'", message.text)
     chat_id = message.chat.id
     calc = bot.get_calc(chat_id)
 
     if calc.change_variable_mode:
         calc.change_variable_mode = False
         var =  message.text
-        if var == '/':
+        if not var or var[0] == '/':
             bot.cancel(message)
             return
-        else:
-            calc.input_variable = var
-            text = f'Введите значение переменной {var}\n(для отмены введите "/"):'
+
+        calc.input_variable = var
+        text = f'Введите значение переменной {var}\n(для отмены введите "/"):'
 
     elif calc.delete_variable_mode:
         calc.delete_variable_mode = False
         var =  message.text
-        if var == '/':
+        if not var or var[0] == '/':
             bot.cancel(message)
             return
-        elif var not in calc.values:
+
+        if var not in calc.values:
             lines = [f'Переменная {var} отсутствует\n']
         else:
             calc.values.pop(var)
@@ -169,19 +230,14 @@ def text_handler(message):
         var = calc.input_variable
         calc.input_variable = None
         expr = message.text
-        if expr == '/':
+        if not expr or expr[0] == '/':
             bot.cancel(message)
             return
-        else:
-            value = calc.symbolic_expr(expr)
-            calc.values[var] = value
-            lines = [f'Новое значение {var} = {value}\n']
-            lines.extend(calc.status())
-            text = '\n'.join(lines)
 
-    elif calc.delete_variable_mode:
-        calc.delete_variable_mode = False
-        return
+        calc.set_value(var, expr)
+        lines = [f'Новое значение {var} = {expr}\n']
+        lines.extend(calc.status())
+        text = '\n'.join(lines)
 
     elif message.text == '/':
         message.text = '/status'
@@ -197,10 +253,18 @@ def text_handler(message):
 
     else:
         text = calc.set_new_expr(message.text) # None or text of an Error
-        if text is None:
+        if text == "":
             text = '\n'.join(calc.status()) 
 
+    bot.logger.debug("Sending message: '%s'", text)
     bot.send_message(chat_id, text)
 
 if __name__ == '__main__':
-    bot.polling()
+    try:
+        bot.polling()
+    except KeyboardInterrupt:
+        bot.logger.info("Interrupted by Keyboard")
+    # except Exception as exc:
+        # bot.logger.error("Error: %s", exc)
+    finally:
+        bot.save_all()
