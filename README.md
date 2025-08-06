@@ -40,11 +40,12 @@
 ├── LICENSE
 ├── README.md
 ├── requirements.txt
+├── requirements_full.txt
 ├── requirements_console_calc.txt
 ├── symcalc.py              — запуск (mini)-gui/консольной версии
 ├── run_symcalc.sh          — скрипт для запуска (mini)-gui/консольной версии
 ├── run_client.sh           — скрипт для запуска клиента
-├── run_tegram_bot.sh       — скрипт для запуска телеграм бота
+├── run_telegram_bot.sh       — скрипт для запуска телеграм бота
 └── run_web_service.sh      — скрипт для запуска сервиса
 ```
 
@@ -52,22 +53,40 @@
 
 Мой телеграм бот: https://t.me/SymbolicCalculator_bot
 
-Используемые библиотеки:
-sympy==1.11.1, PyQt5==5.15.7, simple_term_menu==1.6.1, pyTelegramBotAPI==4.12.0, fastapi==0.116.1, uvicorn==0.35.0
+Используемые (прямым импортом) библиотеки:
+
+ - Требуемые: sympy==1.11.1, PyQt5==5.15.7, simple_term_menu==1.6.1, pyTelegramBotAPI==4.12.0, fastapi==0.116.1, uvicorn==0.35.0
+
+ - Зависимые: pydantic==2.11.7 (от fastapi), requests==2.32.4 (от pyTelegramBotAPI)
+
+Полный список всех библиотек см. в файле `requirements_full.txt`.
 
 ## Установка
 
+Скачать с github или клонировать через git:
+```
+git clone git@github.com:silantjev/Symbolic-Calculator.git
+cd Symbolic-Calculator/
+```
+
 Для установки Python см. https://www.python.org/downloads/
+
+Рекомендуется использовать Python 3.10 и виртуальное окружение
+
 На ubuntu:
 ```bash
-sudo apt-get install python3
+sudo apt-get install python3.10==3.10.18-1+focal1
+python3.10 -m venv ".venv"
+source ".venv/bin/activate"
 ```
-Рекомендуется использовать Python 3.10 и виртуальное окружение .venv
 
 Также необходимо установить модули:
 ```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
+
+Для работы telegram-бота необходимо создать файл `telegram/mytoken.py` и указать там токен (см. ниже).
 
 ## Запуск
 Для запуска можно использовать bash-скрипты, находящиеся в корне.
@@ -105,7 +124,7 @@ TOKEN = 'my-sectet-token'
 ```
 в файл `telegram/mytoken.py`. Затем запустить бот-сервис командой
 ```bash
-./run_tegram_bot.sh [-l] [-f]
+./run_telegram_bot.sh [-l] [-f]
 ```
 
 ## Команды для docker:
