@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 from sympy import * # pylint: disable=wildcard-import, unused-wildcard-import
+from .custom_functions import *
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
