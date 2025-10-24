@@ -6,3 +6,8 @@ __pycache__/
 logs/*
 v1/
 v2/
+*conan_cache
+*build
+*bin
+**/profiles/*.cfg
+CMakeUserPresets.json
