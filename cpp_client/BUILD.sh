@@ -6,7 +6,8 @@ export CACHE_VOLUME="$root/storage_conan/conan_cache"
 mkdir -p "$CACHE_VOLUME"
 
 profile="$root/storage_conan/profiles/release.cfg"
-storage="-cc core.cache:storage_path=\"${CACHE_VOLUME}/conan2/0/packages\""
+
+storage="core.cache:storage_path=${CACHE_VOLUME}/conan2/0/packages"
 build_type="Release"
 build_dir="build"
 
@@ -27,7 +28,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --clean-cache)
             shift
-            conan remove '*' $storage
+            conan remove '*' -cc "$storage"
             echo '*' removed from $CACHE_VOLUME
             ;;
         -d)
@@ -54,7 +55,7 @@ mkdir -p "$build_dir"
 [[ -d bin ]] && rm -r bin
 mkdir bin
 
-conan install . --profile:build="$profile" --profile:host="$profile" --build=missing --output-folder="$build_dir" $storage -r conancenter
+conan install . --profile:build="$profile" --profile:host="$profile" --build=missing --output-folder="$build_dir" -cc "$storage" -r conancenter
 
 cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE=$build_type -DCMAKE_TOOLCHAIN_FILE="$build_dir"/conan_toolchain.cmake
 cmake --build "$build_dir" --parallel $(($(nproc) - 1)) --verbose
