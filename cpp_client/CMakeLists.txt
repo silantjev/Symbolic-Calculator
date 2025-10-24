@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+# include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
 
 project(cpp_client LANGUAGES CXX)
 

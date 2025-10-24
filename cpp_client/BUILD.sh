@@ -2,11 +2,13 @@
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 set -e
 
-export CACHE_VOLUME="$root/resources/conan_cache"
+export CACHE_VOLUME="$root/storage_conan/conan_cache"
 mkdir -p "$CACHE_VOLUME"
 
-profile="$root/resources/profiles/release.cfg"
-storage="-cc core.cache:storage_path=${CACHE_VOLUME}/conan2/0/packages"
+profile="$root/storage_conan/profiles/release.cfg"
+storage="-cc core.cache:storage_path=\"${CACHE_VOLUME}/conan2/0/packages\""
+build_type="Release"
+build_dir="build"
 
 if [ ! -f "$profile" ]; then
     echo "Profile \"${profile}\" not found, creating default profile..."
@@ -14,42 +16,46 @@ if [ ! -f "$profile" ]; then
     cp "$(conan profile path "${profile##*/}")" "$profile" || { echo "ERROR: Failed to create \"${profile}\""; exit 1; }
 fi
 
+cd "$root"
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --clean)
-            # conan remove '*' $storage
-            exit 1
+        clean)
+            [[ -d "$build_dir" ]] && rm -r "$build_dir" && echo Folder \"$(pwd)/"$build_dir"\" deleted
+            [[ -d "$CACHE_VOLUME" ]] && rm -r "$CACHE_VOLUME" && echo Folder \"$CACHE_VOLUME\" deleted
+            exit 0
+            ;;
+        --clean-cache)
             shift
+            conan remove '*' $storage
             echo '*' removed from $CACHE_VOLUME
             ;;
+        -d)
+            shift
+            build_type="Debug"
+            ;;
         --help)
-            echo Usage $0 [--clean]
+            echo Usage:
+            echo "  $0 [--clean-cache] [-d]"
+            echo "  $0 clean"
             exit 0
             ;;
         *)
             echo  "Unknown option: $1" >&2
-            echo Usage $0 [--clean] >&2
+            echo "Try: $0 --help" >&2
             exit 1
             ;;
     esac
 done
 
-cd "$root"
-[[ -d build ]] && rm -r build/
+[[ -d "$build_dir" ]] && rm -r "$build_dir"
+mkdir -p "$build_dir"
 
 [[ -d bin ]] && rm -r bin
 mkdir bin
 
-conan install . --profile:build="$profile" --profile:host="$profile" --build=missing --output-folder=build $storage -r conancenter
+conan install . --profile:build="$profile" --profile:host="$profile" --build=missing --output-folder="$build_dir" $storage -r conancenter
 
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel 7 --verbose
+cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE=$build_type -DCMAKE_TOOLCHAIN_FILE="$build_dir"/conan_toolchain.cmake
+cmake --build "$build_dir" --parallel $(($(nproc) - 1)) --verbose
 
-# копирование в bin:
-
-# cp build/cpp_client bin/
-# cd bin
-# ldd cpp_client | grep "=> /" | awk '{print $3}' | xargs -I {} cp -L {} .
-# cd ..
-# 
-# echo "Deployed! Run: ./bin/cpp_client"
