@@ -39,7 +39,7 @@
 │   ├── include/            — Заголовочные файлы
 │   ├── conanfile.py        — Конфигурация сборки
 │   ├── CMakeLists.txt      — Конфигурация сборки
-│   └── resources/          — Временные ресурсы и конфиги
+│   └── storage_conan/      — Временные файлы (кэш) и конфиги для конана
 ├── telegram
 │   ├── bot.py              — сервис для телеграм-бота (требуется токен)
 │   └── mytoken.py          — здесь секретный токен: TOKEN = ...
@@ -147,4 +147,21 @@ docker run -it --rm --name ccalc ccalc_image
  - Остановка:
 ```bash
 docker stop ccalc
+```
+
+## С++ версия клиента
+
+Для установки через conan (надёжнее, оптимизирование)
+```bash
+sudo apt-get install build-essential cmake patchelf
+pip install conan==2.21.0
+cd cpp_client
+./BUILD.sh
+```
+
+Для установки без conan, используя системные пакеты (процесс установки быстрее)
+```bash
+sudo apt-get install build-essential cmake qtbase5-dev qttools5-dev-tools qt5-default
+cd cpp_client
+./BUILD_WITHOUT_CONAN.sh
 ```
