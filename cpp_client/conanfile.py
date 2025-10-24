@@ -28,6 +28,7 @@ class CppCilentConan(ConanFile):
         self.options["qt"].qtwidgets = True
         self.options["qt"].qtgui = True
         self.options["qt"].qtnetwork = True
+
         self.settings.compiler.cppstd=17
 
     def generate(self):
