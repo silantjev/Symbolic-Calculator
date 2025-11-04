@@ -1,5 +1,6 @@
 # Console version for application or client
 
+import readline # pylint: disable=unused-import
 import sys
 from pathlib import Path
 from simple_term_menu import TerminalMenu

@@ -16,10 +16,7 @@ from gui.minigui import MainWin
 def main(log_file=True, log_console=True, url=None):
     app = QApplication(sys.argv)  # create application
     logger = make_logger(name="minigui_client", file=log_file, console=log_console)
-    if url is None:
-        calc = CalcClient(logger=logger)
-    else:
-        calc = CalcClient(base_url=url, logger=logger)
+    calc = CalcClient(base_url=url, logger=logger)
     win = MainWin(calc)
     win.show()
     sys.exit(app.exec_())  # execute the application

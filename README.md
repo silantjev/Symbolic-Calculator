@@ -78,18 +78,28 @@ cd Symbolic-Calculator/
 
 Для установки Python см. https://www.python.org/downloads/
 
-Рекомендуется использовать Python 3.10 и виртуальное окружение
+Рекомендуется использовать Python 3.10.18-1 и виртуальное окружение
+
 
 На ubuntu:
 ```bash
-sudo apt-get install python3.10==3.10.18-1+focal1
+sudo apt-get update
+sudo apt-get install python3.10 python3.10-venv
+```
+Если нужной версии python нет на ubuntu, то сначала подключить репозиторий
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+```
+
+Виртуальное окружение (через `pip`):
+```bash
 python3.10 -m venv ".venv"
-source ".venv/bin/activate"
+source .venv/bin/activate
 ```
 
 Также необходимо установить модули:
 ```bash
-pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
