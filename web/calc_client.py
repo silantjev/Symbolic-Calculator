@@ -8,16 +8,22 @@ sys.path.insert(0, str(ROOT))
 
 from core.logger import make_logger
 
+DEFAULT_URL = 'http://127.0.0.1:8000'
+
 class CalcClient:
-    def __init__(self, base_url='http://127.0.0.1:8000', logger=None):
-        self.base_url = base_url
+    def __init__(self, base_url=None, logger=None):
+        if base_url is None:
+            self.base_url = DEFAULT_URL
+        else:
+            self.base_url = base_url
+
         if logger is None:
             logger_name = self.__class__.__name__
             self.logger = make_logger(name=logger_name, file=False, console=False, level=logging.WARNING)
         else:
             self.logger = logger
 
-        self.data = self.get("get_state", params = {"full": True})
+        self.data = self.get(endpoint="get_state", params={"full": True})
         self.logger.info("CalcClient connected and loaded data %s", list(self.data))
     
     # Запросы
