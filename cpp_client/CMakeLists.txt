@@ -35,6 +35,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt5::Network 
 )
 
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
 target_compile_definitions(${PROJECT_NAME} 
     PRIVATE QT_DEPRECATED_WARNINGS
 )
