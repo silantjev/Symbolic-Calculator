@@ -1,109 +1,21 @@
 import sys
 import logging
 from pathlib import Path
-import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core.logger import make_logger
+from web.calc_http_requester import CalcHttpRequester
 
-DEFAULT_URL = 'http://127.0.0.1:8000'
 
-class CalcClient:
+class CalcClient(CalcHttpRequester):
     def __init__(self, base_url=None, logger=None):
-        if base_url is None:
-            self.base_url = DEFAULT_URL
-        else:
-            self.base_url = base_url
-
-        if logger is None:
-            logger_name = self.__class__.__name__
-            self.logger = make_logger(name=logger_name, file=False, console=False, level=logging.WARNING)
-        else:
-            self.logger = logger
+        super().__init__(base_url, logger)
 
         self.data = self.get(endpoint="get_state", params={"full": True})
         self.logger.info("CalcClient connected and loaded data %s", list(self.data))
     
-    # Запросы
-    def get(self, endpoint, params=None):
-        if params is None:
-            params = {}
-        try:
-            response = requests.get(
-                    f"{self.base_url}/calc/{endpoint}",
-                    params=params,
-                    timeout=5,
-                )
-        except requests.exceptions.ConnectionError as exc:
-            self.logger.error("Connection to '%s' failed: %s", self.base_url, exc, exc_info=False)
-            raise ConnectionError("Connection failed: run api_service")
-
-        if response.status_code != 200:
-            self.logger.error("Error while getting full sate. Status code: %s. Details: %s", response.status_code, response.text)
-            raise requests.HTTPError(f"Bad status code {response.status_code}: {response.json()}")
-
-        return response.json()
-
-    def put_state(self):
-        response = requests.put(
-                f"{self.base_url}/calc/put_state",
-                json=self.data,
-                timeout=5,
-            )
-
-        if response.status_code == 400 and "detail" in response.json() and "Error" in response.json()["detail"]:
-            return response.json()["detail"]['Error']
-
-        if response.status_code != 200:
-            self.logger.error("Error while getting full sate. Status code: %s. Details: %s", response.status_code, response.text)
-            raise requests.HTTPError(f"Bad status code {response.status_code}: {response.json()}")
-
-
-        data = response.json()
-        self.data.update(data)
-        self.logger.debug("CalcClient updated data %s", data)
-        return ""
-
-    def post(self, endpoint, json):
-        response = requests.post(
-                f"{self.base_url}/calc/{endpoint}",
-                json=json,
-                timeout=5,
-            )
-
-        if response.status_code == 400 and "detail" in response.json() and "Error" in response.json()["detail"]:
-            return response.json()["detail"]['Error']
-
-        if response.status_code != 200:
-            self.logger.error("Error while getting full sate. Status code: %s. Details: %s", response.status_code, response.text)
-            raise requests.HTTPError(f"Bad status code {response.status_code}: {response.json()}")
-
-
-        data = response.json()
-        self.data.update(data)
-        self.logger.debug("CalcClient updated data %s", data)
-        return ""
-
-    def delete(self, endpoint, params=None):
-        if params is None:
-            params = {}
-
-        response = requests.delete(
-                f"{self.base_url}/calc/{endpoint}",
-                timeout=5,
-                params=params,
-            )
-
-        if response.status_code != 200:
-            self.logger.error("Error while getting full sate. Status code: %s. Details: %s", response.status_code, response.text)
-            raise requests.HTTPError(f"Bad status code {response.status_code}: {response.json()}")
-
-        data = response.json()
-        self.data.update(data)
-        self.logger.debug("CalcClient updated data %s", data)
-
     # сеттеры
     def set_option(self, k, val):
         try:
@@ -207,17 +119,6 @@ class CalcClient:
     def clear_all(self):
         self.delete(endpoint="clear_all")
         self.logger.info("State cleared")
-
-    def save_state(self, session_id):
-        response = requests.post(
-                f"{self.base_url}/calc/save_state",
-                params={"session_id": session_id},
-                timeout=5,
-            )
-
-        if response.status_code != 200:
-            self.logger.error("Error while getting full sate. Status code: %s. Details: %s", response.status_code, response.text)
-            raise requests.HTTPError(f"Bad status code {response.status_code}: {response.json()}")
 
 
 if __name__ == '__main__':

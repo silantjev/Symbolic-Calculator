@@ -23,6 +23,7 @@
 │   ├── api_service.py      — web-сервис калькулятора
 │   ├── pyd_models.py       — pydantic-модели для сервиса
 │   ├── calc_client.py      — клиент-калькулятор для взаимодействия с сервисом
+│   ├── calc_http_requester.py — запросы для calc_client.py
 │   └── run_client.py       — запуск клиента
 ├── console
 │   ├── console_calc.py     — консольная версия калькулятора
