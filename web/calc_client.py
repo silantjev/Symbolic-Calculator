@@ -23,15 +23,15 @@ class CalcClient(CalcHttpRequester):
             if val == self.data['options'][k]:
                 self.logger.debug("Trying to set the same value %d to option %s", val, k)
                 return True
-            if val > 1:
+            if val >= 1:
                 self.data['options'][k] = val
                 error = self.put_state()
                 if error:
-                    self.logger.error("Error: %s", error)
+                    self.logger.error("Error while setting option: %s", error)
                     return False
-                self.logger.debug("Option %s set to value %d", k, val)
+                self.logger.info("Option %s set to value %d", k, val)
                 return True
-            self.logger.warning("Wrong value of %s. The value should be positive but %d is given", k, val)
+            self.logger.warning("Wrong value of %s. The value should be positive but %d was given", k, val)
         except TypeError:
             self.logger.warning("Wrong type of the value of %s. The type is %s, but int is needed", k, type(val))
         return False
@@ -40,16 +40,20 @@ class CalcClient(CalcHttpRequester):
         error = self.post(endpoint="set_new_expr", json={"expr": expr})
         if error:
             self.logger.error("Error while setting new expression: %s", error)
+        else:
+            self.logger.info("New expression set: expr = %s", self.data['expr'])
+            self.logger.info("and parsed to sympy-expression : SE = %s", self.data['se'])
         return error
+
+# Чистые сеттеры
 
     def set_se(self, expr) -> str:
         self.data['se'] = str(expr)
-        self.put_state()
         error = self.put_state()
         if error:
-            self.logger.error("Error: %s", error)
+            self.logger.error("Error while setting SE: %s", error)
             return error
-        self.logger.info("Sympy-expression set: se = %s", self.data['se'])
+        self.logger.info("Sympy-expression set: SE = %s", self.data['se'])
         return ""
 
     def set_expr(self, expr):
@@ -60,13 +64,13 @@ class CalcClient(CalcHttpRequester):
     def set_sec(self, sec):
         self.data['sec'] = sec
         self.put_state() # no exception
-        self.logger.info("Field 'sec' set: sec = %s", self.data['sec'])
+        self.logger.info("Sympy-expression 'calculated' set: SEC = %s", self.data['sec'])
 
     def set_value(self, var, expr):
         self.data['values'][var] = expr
         error = self.put_state()
         if error:
-            self.logger.error("Error: %s", error)
+            self.logger.error("Error while setting value of a variable: %s", error)
             return error
         self.logger.info("Value of %s set to %s", var, self.data['value'][var])
         return ""
