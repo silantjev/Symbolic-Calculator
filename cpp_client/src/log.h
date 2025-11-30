@@ -6,6 +6,12 @@
 #include <QMessageLogContext>
 #include <QDebug>
 
+#ifdef FORMATTED_MSG
+    #define FORMATTED(arg) (formattedMsg)
+#else
+    #define FORMATTED(arg) (arg)
+#endif
+
 class Logger final
 {
 public:
@@ -51,11 +57,11 @@ public:
         {
             if (toErr)
             {
-                std::cerr << msg.toStdString() << std::endl;
+                std::cerr << FORMATTED(msg).toStdString() << std::endl;
             }
             else
             {
-                std::cout << msg.toStdString() << std::endl;
+                std::cout << FORMATTED(msg).toStdString() << std::endl;
             }
         }
 

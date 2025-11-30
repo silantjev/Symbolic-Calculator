@@ -3,7 +3,9 @@
 #include <QDir>
 #include <QMainWindow>
 
-#include <log.h>
+#include "log.h"
+#include "requests/calc_http_requester.h"
+#include "calc_client.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,16 +14,24 @@ int main(int argc, char *argv[])
     Logger logger(true);
     static Logger* loggerPtr = &logger;
     qInstallMessageHandler([](auto... args) { loggerPtr->handle(args...); });
-    qDebug() << "Debug string";
-    qInfo() << "Info string";
-    qWarning() << "Warning string";
-    qCritical() << "Critical string";
 
-    //Устанавливаем путь к плагинам относительно бинарника
-    // QDir binDir(QCoreApplication::applicationDirPath());
-    // QCoreApplication::addLibraryPath(binDir.absoluteFilePath("platforms"));
+    auto* client = new CalcClient("", &app);
 
-    QMainWindow window;
-    window.show();
-    return app.exec();
+    client->setNewExpr("x/6 - 6.7");
+
+    return 0;
+    auto* requester = new CalcHttpRequester("", &app);
+
+    QString error = requester->post("set_new_expr", {{"expr", "x/5"}});
+    if (!error.isEmpty())
+    {
+        qCritical() << "POST Error" << error;
+        return 1;
+    }
+
+
+    return 0;
+    // QMainWindow window;
+    // window.show();
+    // return app.exec();
 }

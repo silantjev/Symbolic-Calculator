@@ -38,5 +38,5 @@ mkdir -p "$build_dir"
 [[ -d bin ]] && rm -r bin
 mkdir bin
 
-cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE=$build_type
+cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE=$build_type -DINSTALL_TO_BIN=ON
 cmake --build "$build_dir" --parallel $(($(nproc) - 1)) --verbose

@@ -6,10 +6,14 @@ project(cpp_client LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+option(CMAKE_BUILD_TYPE "build type" Debug)
 
 find_package(Qt5 COMPONENTS Core Widgets Network REQUIRED)
 
-file(GLOB SOURCE "src/*.cpp")
+file(GLOB SOURCE
+    src/*.cpp
+    src/requests/*.cpp
+)
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 # Устанавливаем RPATH для бинарника
@@ -22,12 +26,22 @@ set(RPATH_LIST
 set_target_properties(${PROJECT_NAME} PROPERTIES
     AUTOMOC ON # Включаем MOC автоматически
     CXX_STANDARD 17
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
-    INSTALL_RPATH_USE_LINK_PATH TRUE
-    INSTALL_RPATH "${RPATH_LIST}"
-    BUILD_WITH_INSTALL_RPATH TRUE
-    SKIP_INSTALL_RPATH FALSE
 )
+option(FORMATTED_MSG "formatted log massages in cosole" ON)
+if (FORMATTED_MSG)
+    add_definitions(-DFORMATTED_MSG)
+endif()
+
+option(INSTALL_TO_BIN "install exqcutabe to bin/" OFF)
+if (INSTALL_TO_BIN)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+        INSTALL_RPATH "${RPATH_LIST}"
+        BUILD_WITH_INSTALL_RPATH TRUE
+        SKIP_INSTALL_RPATH FALSE
+    )
+endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt5::Core 
