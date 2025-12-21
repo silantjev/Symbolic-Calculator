@@ -8,7 +8,7 @@
 class CalcClient final : private CalcHttpRequester
 {
 public:
-    CalcClient(const QString& baseUrl, QObject* parent);
+    CalcClient(const QString& baseUrl, int timeout, QObject* parent);
 
     //Сеттеры с запросом действия
     QString setNewExpr(const QString& expr);

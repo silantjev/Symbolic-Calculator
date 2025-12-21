@@ -1,8 +1,8 @@
 #include "calc_client.h"
 #include "requests/json_dump.h"
 
-CalcClient::CalcClient(const QString& baseUrl, QObject* parent)
-    : CalcHttpRequester(baseUrl, parent)  
+CalcClient::CalcClient(const QString& baseUrl, int timeout, QObject* parent)
+    : CalcHttpRequester(baseUrl, timeout, parent)  
 {
     m_data = CalcHttpRequester::get("get_state", {{"full", true}});
     qInfo() << "CalcClient connected and loaded data:" << shortJson(m_data);

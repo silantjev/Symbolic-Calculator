@@ -4,6 +4,7 @@ __pycache__/
 *vars.py
 .venv
 logs/*
+*.json
 v1/
 v2/
 *conan_cache

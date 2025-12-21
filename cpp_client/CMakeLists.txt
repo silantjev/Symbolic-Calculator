@@ -13,6 +13,7 @@ find_package(Qt5 COMPONENTS Core Widgets Network REQUIRED)
 file(GLOB SOURCE
     src/*.cpp
     src/requests/*.cpp
+    src/utils/*.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCE})
 

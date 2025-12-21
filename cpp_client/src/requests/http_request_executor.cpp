@@ -4,10 +4,8 @@
 #include <QEventLoop>
 
 #include "http_request_executor.h"
+#include "utils/defaults.h"
 #include "json_dump.h"
-
-constexpr const char* DEFAULT_URL = "http://127.0.0.1:8000";
-
 
 //Вспомогательные функции
 void addParams(QUrl& url, const QVariantMap& params)
@@ -20,7 +18,7 @@ void addParams(QUrl& url, const QVariantMap& params)
     url.setQuery(query);
 }
 
-HttpRequestExecutor::HttpRequestExecutor(const QString& baseUrl, QObject* parent) 
+HttpRequestExecutor::HttpRequestExecutor(const QString& baseUrl,  int timeout, QObject* parent) 
     : QObject(parent)
     , m_baseUrl(baseUrl)
     , m_networkManager(new QNetworkAccessManager(this))
@@ -28,9 +26,11 @@ HttpRequestExecutor::HttpRequestExecutor(const QString& baseUrl, QObject* parent
 {
     if (m_baseUrl.isEmpty())
         m_baseUrl = DEFAULT_URL;
+    if (timeout <= 0)
+        timeout = DEFAULT_TIMEOUT;
     
     m_timeoutTimer->setSingleShot(true);
-    m_timeoutTimer->setInterval(5000); // 5 секунд таймаут
+    m_timeoutTimer->setInterval(timeout); // таймаут в миллисекундах
 }
 
 HttpRequestExecutor::~HttpRequestExecutor()
@@ -74,6 +74,16 @@ QJsonObject HttpRequestExecutor::makeRequest(const QString& endpoint, ReqMethod 
 
 void HttpRequestExecutor::makeSyncRequest(const QUrl& url, ReqMethod mtd, const QJsonObject& body)
 {
+    //Разъединяем предыдущие соединения
+    if (m_timeoutConnection)
+    {
+        disconnect(m_timeoutConnection);
+    }
+    if (m_replyConnection)
+    {
+        disconnect(m_replyConnection);
+    }
+
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     
@@ -102,17 +112,24 @@ void HttpRequestExecutor::makeSyncRequest(const QUrl& url, ReqMethod mtd, const 
     }
 
     //Подключаем обработчики
-    connect(m_currentReply, SIGNAL(finished()),
-            this, SLOT(onReplyFinished()));
-    connect(m_timeoutTimer, SIGNAL(timeout()),
-            this, SLOT(onTimeout()));
+    m_replyConnection = connect(
+        m_currentReply, SIGNAL(finished()),
+        this, SLOT(onReplyFinished()));
+    Q_ASSERT(m_replyConnection);
+
+    m_timeoutConnection = connect(
+        m_timeoutTimer, SIGNAL(timeout()),
+        this, SLOT(onTimeout()));
+    Q_ASSERT(m_timeoutConnection);
     
     m_timeoutTimer->start();
     
     // Ожидаем завершения запроса
     QEventLoop loop;
-    connect(this, SIGNAL(requestFinished()),
-            &loop, SLOT(quit()));
+    const bool connOK = connect(
+        this, SIGNAL(requestFinished()),
+        &loop, SLOT(quit()));
+    Q_ASSERT(connOK);
     loop.exec();
 }
 

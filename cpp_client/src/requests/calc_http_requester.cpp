@@ -13,9 +13,9 @@ QJsonObject shortJson(QJsonObject data)
     return data;
 }
 
-CalcHttpRequester::CalcHttpRequester(const QString& baseUrl, QObject* parent)
+CalcHttpRequester::CalcHttpRequester(const QString& baseUrl, int timeout, QObject* parent)
     : QObject(parent)
-    , m_executor(new HttpRequestExecutor(baseUrl, this))
+    , m_executor(new HttpRequestExecutor(baseUrl, timeout, this))
 {
 }
 
