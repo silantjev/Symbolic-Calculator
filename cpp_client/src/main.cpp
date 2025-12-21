@@ -6,6 +6,7 @@
 #include "log.h"
 #include "requests/calc_http_requester.h"
 #include "calc_client.h"
+#include "utils/files.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,20 +16,35 @@ int main(int argc, char *argv[])
     static Logger* loggerPtr = &logger;
     qInstallMessageHandler([](auto... args) { loggerPtr->handle(args...); });
 
-    auto* client = new CalcClient("", &app);
-
-    client->setNewExpr("x/6 - 6.7");
-
-    return 0;
-    auto* requester = new CalcHttpRequester("", &app);
-
-    QString error = requester->post("set_new_expr", {{"expr", "x/5"}});
-    if (!error.isEmpty())
+    QString url;
+    int timeout {0};
+    const bool confOK = readUrlFromConfig(url, timeout);
+    if (!confOK)
     {
-        qCritical() << "POST Error" << error;
-        return 1;
+        url = QString();
+        timeout = 0;
+        qDebug() << "Failed to read config file. Using default configurations";
     }
 
+    auto* client = new CalcClient(url, timeout, &app);
+
+    client->clearAll();
+    client->setExpr("y/7");
+    client->setNewExpr(client->getExpr());
+    client->setValue("y", "-9");
+    client->delValue("y");
+    client->setOption("digits", 3);
+    QString sec = client->evaluate();
+    qInfo() << "evaluation result:" << sec;
+    client->setSEC(sec);
+    qInfo() << "nice:" << client->getNice();
+    qInfo() << "exp:" << client->getExpr();
+    qInfo() << "SE:" << client->getSE();
+    qInfo() << "SEC:" << client->getSEC();
+    qInfo() << "variable names:" << client->getVarNames();
+    qInfo() << "variables:" << client->getVariables(false);
+    // qInfo() << "Explanations:" << client->getExplanations();
+    // qInfo().noquote() << client->getHelpText();
 
     return 0;
     // QMainWindow window;

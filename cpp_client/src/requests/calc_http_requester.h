@@ -12,9 +12,13 @@ QJsonObject shortJson(QJsonObject data);
 class CalcHttpRequester : public QObject
 {
     Q_OBJECT
+protected:
+    QJsonObject m_data;
+private:
+    HttpRequestExecutor* m_executor;
 
 public:
-    CalcHttpRequester(const QString& baseUrl, QObject* parent);
+    CalcHttpRequester(const QString& baseUrl, int timeout, QObject* parent);
 
     virtual ~CalcHttpRequester() = default;
 
@@ -31,10 +35,5 @@ public:
     void del(const QString& endpoint, const QVariantMap& params = QVariantMap());
 
     void saveState(int sessionId);
-
-protected:
-    QJsonObject m_data;
-private:
-    HttpRequestExecutor* m_executor;
 };
 

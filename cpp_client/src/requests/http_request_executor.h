@@ -12,7 +12,6 @@
 class HttpRequestExecutor: public QObject
 {
     Q_OBJECT
-
 public:
     enum class ReqMethod { GET, POST, PUT, DELETE };
     const char* methodName(ReqMethod mtd);
@@ -37,7 +36,19 @@ public:
         void log() const;
     };
 
-    explicit HttpRequestExecutor(const QString& base_url = "", QObject* parent = nullptr);
+private:
+    QString m_baseUrl;
+    QJsonObject m_responseData;
+    QNetworkAccessManager* m_networkManager {nullptr};
+    QTimer* m_timeoutTimer {nullptr};
+    QNetworkReply* m_currentReply {nullptr};
+    bool m_requestSuccess {false};
+    std::optional<Error> m_requestError {std::nullopt};
+    QMetaObject::Connection m_timeoutConnection;
+    QMetaObject::Connection m_replyConnection;
+
+public:
+    explicit HttpRequestExecutor(const QString& base_url = QString(), int timeout = 0, QObject* parent = nullptr);
     ~HttpRequestExecutor();
 
     QJsonObject makeRequest(
@@ -90,14 +101,5 @@ private slots:
 
 private:
     void makeSyncRequest(const QUrl& url, ReqMethod mtd, const QJsonObject& body = QJsonObject());
-private:
-    QString m_baseUrl;
-    QJsonObject m_responseData;
-    QNetworkAccessManager* m_networkManager {nullptr};
-    QTimer* m_timeoutTimer {nullptr};
-    QNetworkReply* m_currentReply {nullptr};
-    bool m_requestSuccess {false};
-    std::optional<Error> m_requestError {std::nullopt};
-
 };
 
