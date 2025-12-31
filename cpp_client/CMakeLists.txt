@@ -14,6 +14,7 @@ file(GLOB SOURCE
     src/*.cpp
     src/requests/*.cpp
     src/utils/*.cpp
+    src/gui/*.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCE})
 

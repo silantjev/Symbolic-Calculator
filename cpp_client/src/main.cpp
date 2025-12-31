@@ -7,6 +7,7 @@
 #include "requests/calc_http_requester.h"
 #include "calc_client.h"
 #include "utils/files.h"
+#include "gui/minigui.h"
 
 int main(int argc, char *argv[])
 {
@@ -28,6 +29,7 @@ int main(int argc, char *argv[])
 
     auto* client = new CalcClient(url, timeout, &app);
 
+    /*
     client->clearAll();
     client->setExpr("y/7");
     client->setNewExpr(client->getExpr());
@@ -47,7 +49,9 @@ int main(int argc, char *argv[])
     // qInfo().noquote() << client->getHelpText();
 
     return 0;
-    // QMainWindow window;
-    // window.show();
-    // return app.exec();
+    */
+    MiniWin window(client);
+    window.show();
+    return app.exec();
+    return 0;
 }

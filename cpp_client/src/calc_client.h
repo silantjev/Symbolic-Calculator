@@ -41,5 +41,6 @@ public:
     void delValue(const QString& variable);
     QString evaluate();
     void clearAll();
+    void saveState();
 };
 

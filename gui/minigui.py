@@ -42,9 +42,9 @@ class MainWin(QDialog):
         self.btn_parse.move(70, 50)
         self.btn_parse.clicked.connect(self.parse_down)
 
-        self.btn_up = QPushButton('↑ перебросить', self)
-        self.btn_up.move(250, 50)
-        self.btn_up.clicked.connect(self.se_up)
+        self.btn_up1 = QPushButton('↑ перебросить', self)
+        self.btn_up1.move(250, 50)
+        self.btn_up1.clicked.connect(self.se_up)
 
         self.se_text = QLE(str(calc.get_se()), self)
         self.se_text.move(50, 80)
@@ -55,9 +55,9 @@ class MainWin(QDialog):
         self.btn_eval.move(70, 110)
         self.btn_eval.clicked.connect(self.eval_down)
 
-        self.btn_up = QPushButton('↑ перебросить', self)
-        self.btn_up.move(250, 110)
-        self.btn_up.clicked.connect(self.sec_up)
+        self.btn_up2 = QPushButton('↑ перебросить', self)
+        self.btn_up2.move(250, 110)
+        self.btn_up2.clicked.connect(self.sec_up)
 
         self.sec_text = QLE(calc.get_sec(), self)
         self.sec_text.move(50, 140)

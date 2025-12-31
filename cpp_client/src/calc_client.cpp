@@ -195,3 +195,8 @@ void CalcClient::clearAll()
     CalcHttpRequester::del("clear_all");
     qInfo() << "State cleared";
 }
+
+void CalcClient::saveState()
+{
+    return CalcHttpRequester::saveState();
+}

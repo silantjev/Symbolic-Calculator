@@ -5,6 +5,7 @@ from tokenize import TokenError
 
 import fastapi
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -99,8 +100,9 @@ def set_new_expr(data: Expression) -> State:
     return read_state(calc)
 
 @app.post("/calc/save_state")
-def save_state(session_id: int) -> None:
+def save_state(session_id: int):
     state_manager.save_state(calc, session_id=session_id)
+    return JSONResponse(content={"status": "ok"}, status_code=200)
 
 @app.delete("/calc/delete_all_values")
 def delete_all_values() -> State:
