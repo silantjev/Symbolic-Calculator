@@ -34,6 +34,6 @@ public:
 
     void del(const QString& endpoint, const QVariantMap& params = QVariantMap());
 
-    void saveState(int sessionId);
+    void saveState(int sessionId = 0);
 };
 

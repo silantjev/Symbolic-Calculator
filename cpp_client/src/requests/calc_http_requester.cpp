@@ -125,9 +125,10 @@ void CalcHttpRequester::del(const QString& endpoint, const QVariantMap& params)
 
 void CalcHttpRequester::saveState(int sessionId)
 {
+    QJsonObject response;
     try
     {
-        QJsonObject newdata = m_executor->post("calc/save_state", {{"session_id", sessionId}});
+        response = m_executor->post("calc/save_state", QJsonObject(), {{"session_id", sessionId}});
     }
     catch (const HttpRequestExecutor::Error& err)
     {
@@ -139,5 +140,10 @@ void CalcHttpRequester::saveState(int sessionId)
     {
         qCritical() << "Error while saving state";
         throw;
+    }
+
+    if (!response.contains("status") or response["status"].toString() != "ok")
+    {
+        qCritical() << "Error while saving state";
     }
 }
