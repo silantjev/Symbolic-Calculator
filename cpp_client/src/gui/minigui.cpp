@@ -101,7 +101,7 @@ void MiniWin::evalDown()
     }
     else
     {
-        m_calc->setSE(sec);
+        m_calc->setSEC(sec);
         m_SECText->setText(sec);
     }
 }
