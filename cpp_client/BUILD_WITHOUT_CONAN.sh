@@ -11,7 +11,6 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         clean)
             [[ -d "$build_dir" ]] && rm -r "$build_dir" && echo Folder \"$(pwd)/"$build_dir"\" deleted
-            [[ -d "$CACHE_VOLUME" ]] && rm -r "$CACHE_VOLUME" && echo Folder \"$CACHE_VOLUME\" deleted
             exit 0
             ;;
         -d)
