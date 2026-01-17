@@ -23,6 +23,7 @@
 │   ├── api_service.py      — web-сервис калькулятора
 │   ├── pyd_models.py       — pydantic-модели для сервиса
 │   ├── calc_client.py      — клиент-калькулятор для взаимодействия с сервисом
+│   ├── calc_http_requester.py — запросы для calc_client.py
 │   └── run_client.py       — запуск клиента
 ├── console
 │   ├── console_calc.py     — консольная версия калькулятора
@@ -33,6 +34,13 @@
 │   ├── qt_classes.py       — вспомогательный модуль для графической версии
 │   ├── minigui_app.py      — запуск мини-графической версии
 │   └── minigui_client.py   — запуск мини-графической версии как клиента
+├── cpp_client/             — C++ версия клиента
+│   ├── bin/                — Исполняемый файл и библиотеки
+│   ├── src/                — Исходники C++
+│   ├── include/            — Заголовочные файлы
+│   ├── conanfile.py        — Конфигурация сборки
+│   ├── CMakeLists.txt      — Конфигурация сборки
+│   └── storage_conan/      — Временные файлы (кэш) и конфиги для конана
 ├── telegram
 │   ├── bot.py              — сервис для телеграм-бота (требуется токен)
 │   └── mytoken.py          — здесь секретный токен: TOKEN = ...
@@ -150,4 +158,21 @@ docker run -it --rm --name ccalc ccalc_image
  - Остановка:
 ```bash
 docker stop ccalc
+```
+
+## С++ версия клиента
+
+Для установки через conan (надёжнее, оптимизирование)
+```bash
+sudo apt-get install build-essential cmake patchelf
+pip install conan==2.21.0
+cd cpp_client
+./BUILD.sh
+```
+
+Для установки без conan, используя системные пакеты (процесс установки быстрее)
+```bash
+sudo apt-get install build-essential cmake qtbase5-dev qttools5-dev-tools qt5-default
+cd cpp_client
+./BUILD_WITHOUT_CONAN.sh
 ```

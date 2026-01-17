@@ -5,6 +5,7 @@ from tokenize import TokenError
 
 import fastapi
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -63,17 +64,17 @@ def get_variables(include_unset: bool) -> GetVariablesOutput:
 def put_state(data: FullState) -> State:
     try:
         calc.set_expr(data.expr)
-        calc.set_se(data.se) # May throw esception
+        calc.set_se(data.se) # May throw exception
         calc.set_sec(data.sec)
         for k, v in data.values.items():
-            calc.set_value(k, v) # May throw esception
+            calc.set_value(k, v) # May throw exception
         for k, v in data.options.items():
             calc.set_option(k, v)
     except (SyntaxError, TokenError) as exc:
         calc.logger.error("TokenError: %s", exc)
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_400_BAD_REQUEST,
-            detail={"Error": "Синтактическая ошибка"}
+            detail={"Error": "Синтаксическая ошибка"}
         )
 
     return read_state(calc)
@@ -99,8 +100,9 @@ def set_new_expr(data: Expression) -> State:
     return read_state(calc)
 
 @app.post("/calc/save_state")
-def save_state(session_id: int) -> None:
+def save_state(session_id: int):
     state_manager.save_state(calc, session_id=session_id)
+    return JSONResponse(content={"status": "ok"}, status_code=200)
 
 @app.delete("/calc/delete_all_values")
 def delete_all_values() -> State:

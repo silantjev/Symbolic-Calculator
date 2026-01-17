@@ -202,12 +202,12 @@ class CCalculator:
             if expr == '':
                 break
 
-            text = self.calc.set_new_expr(expr)
+            error_text = self.calc.set_new_expr(expr)
 
-            if text == "":
+            if error_text == "":
                 self.calc.set_expr(expr)
                 break
 
-            print(text)  # Error — let's repeat
+            print(error_text)  # Error — let's repeat
 
 
