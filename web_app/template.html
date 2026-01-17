@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Символьный Калькулятор</title>
+</head>
+<body>
+    <h2>Калькулятор</h2>
+    <form action="/symcalc/set_new_expr" method="post">
+        <input type="text" name="expr" placeholder="Введите выражение" value="{expr}" required>
+        <button type="submit">↓ преобразовать</button>
+        <br><br>
+    </form>
+    <form action="/symcalc/process_se" method="post">
+        <button type="submit" name="action" value="se_up">↑ перебросить</button>
+        <br>
+        <input type="text" name="se" value="{se}" required>
+        <button type="submit" name="action" value="evaluate">↓ вычислить</button>
+        <br><br>
+    </form>
+    <form action="/symcalc/up" method="post">
+        <button type="submit">↑ перебросить</button>
+        <br>
+        <input type="text" name="sec" value="{sec}" required>
+        <br><br>
+    </form>
+    <form action="/symcalc/clear_all" method="post">
+        <button type="submit">отчистить всё (AC)</button>
+        <br><br>
+    </form>
+    <form action="/symcalc/info" method="get" target="_blank">
+        <button type="submit">справка</button>
+        <br><br>
+    </form>
+</body>
+</html>
