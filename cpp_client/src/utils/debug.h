@@ -3,6 +3,6 @@
 
 namespace
 {
-class FalkeClass {};
-void fakeFunction(FalkeClass) {}
+class FakeClass {};
+void fakeFunction(FakeClass) {}
 } //namespace

@@ -1,0 +1,230 @@
+<style>
+/* Общие стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #e6e6e6;
+    min-height: 100vh;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Контейнер калькулятора */
+body > * {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Заголовок */
+h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    color: #4cc9f0;
+    text-shadow: 0 0 10px rgba(76, 201, 240, 0.3);
+    padding-bottom: 15px;
+    border-bottom: 2px solid #4361ee;
+    letter-spacing: 1px;
+}
+
+/* Формы */
+form {
+    background: rgba(30, 30, 46, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border: 1px solid #3a3a5d;
+    transition: all 0.3s ease;
+}
+
+form:hover {
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    border-color: #4361ee;
+}
+
+/* Поля ввода */
+input[type="text"] {
+    width: 100%;
+    padding: 18px 20px;
+    font-size: 1.1rem;
+    background: rgba(20, 20, 35, 0.9);
+    border: 2px solid #3a3a5d;
+    border-radius: 10px;
+    color: #f0f0f0;
+    margin: 15px 0;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+input[type="text"]::placeholder {
+    color: #8888aa;
+    opacity: 0.7;
+}
+
+/* Кнопки */
+button {
+    background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    text-align: center;
+    width: 100%;
+    margin: 5px 0;
+    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.2);
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(67, 97, 238, 0.3);
+    background: linear-gradient(135deg, #4895ef 0%, #4361ee 100%);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* Специальные стили для кнопок действий */
+form:first-of-type button {
+    background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+}
+
+form:nth-of-type(2) button[value="evaluate"] {
+    background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+}
+
+form:nth-of-type(2) button[value="se_up"] {
+    background: linear-gradient(135deg, #7209b7 0%, #560bad 100%);
+}
+
+form:nth-of-type(3) button {
+    background: linear-gradient(135deg, #3a0ca3 0%, #7209b7 100%);
+}
+
+form:nth-of-type(4) button {
+    background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+}
+
+form:nth-of-type(5) button {
+    background: linear-gradient(135deg, #2ec4b6 0%, #20a39e 100%);
+}
+
+/* Стрелки в тексте кнопок */
+button:contains("↓")::before {
+    content: "↓ ";
+    font-weight: bold;
+}
+
+button:contains("↑")::after {
+    content: " ↑";
+    font-weight: bold;
+}
+
+/* Отдельные отступы */
+br {
+    display: block;
+    margin: 10px 0;
+    content: "";
+}
+
+/* Стили для текста внутри input */
+input[type="text"] {
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+}
+
+/* Адаптивность */
+@media (max-width: 650px) {
+    body {
+        padding: 20px 15px;
+    }
+    
+    h2 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+    
+    form {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    input[type="text"] {
+        padding: 15px;
+        font-size: 1rem;
+    }
+    
+    button {
+        padding: 14px 20px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    h2 {
+        font-size: 1.8rem;
+    }
+    
+    form {
+        padding: 15px;
+    }
+    
+    button {
+        padding: 12px 15px;
+    }
+}
+
+/* Анимация при загрузке */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+form {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+form:nth-child(2) { animation-delay: 0.1s; }
+form:nth-child(3) { animation-delay: 0.2s; }
+form:nth-child(4) { animation-delay: 0.3s; }
+form:nth-child(5) { animation-delay: 0.4s; }
+
+/* Стиль для текста в фигурных скобках (заполнители) */
+body {
+    counter-reset: form-counter;
+}
+
+form:before {
+    counter-increment: form-counter;
+    content: "Форма " counter(form-counter);
+    display: block;
+    color: #4cc9f0;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    opacity: 0.8;
+    letter-spacing: 1px;
+}
+</style>

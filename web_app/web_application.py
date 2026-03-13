@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from tokenize import TokenError
 
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, Response
 from fastapi.responses import HTMLResponse
 
 FILEDIR = Path(__file__).resolve().parent
@@ -74,6 +74,14 @@ def shutdown_event():
 @app.get("/symcalc", response_class=HTMLResponse)
 def start():
     return html_gen.get_html(calc)
+
+css_path = FILEDIR / "template.css"
+assert css_path.is_file()
+css_content = css_path.read_text(encoding="utf-8")
+
+@app.get("/template.css")
+async def get_css():
+    return Response(content=css_content, media_type="text/css")
 
 def _set_new_expression(expr):
     try:

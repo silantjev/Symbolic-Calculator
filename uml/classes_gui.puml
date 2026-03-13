@@ -1,0 +1,36 @@
+@startuml classes_gui
+set namespaceSeparator none
+class "MainWin" as calculator.gui.minigui.MainWin {
+  btn_eval
+  btn_parse
+  btn_up1
+  btn_up2
+  calc
+  input_text
+  se_text
+  sec_text
+  state_manager
+  closeEvent(event)
+  eval_down()
+  parse_down()
+  reject()
+  se_up()
+  sec_up()
+}
+class "QLE" as calculator.gui.vars.QLE {
+  keyPressEvent(e)
+}
+class "QLE" as calculator.gui.qt_classes.QLE {
+  keyPressEvent(e)
+}
+class "Vars" as calculator.gui.vars.Vars {
+  calc
+  inputs : dict
+  change_value(v)
+}
+class "Vars" as calculator.gui.qt_classes.Vars {
+  calc
+  inputs : dict
+  change_value(v)
+}
+@enduml

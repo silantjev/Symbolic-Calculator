@@ -57,6 +57,6 @@ mkdir bin
 
 conan install . --profile:build="$profile" --profile:host="$profile" --build=missing --output-folder="$build_dir" -cc "$storage" -r conancenter
 
-cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE=$build_type -DCMAKE_TOOLCHAIN_FILE="$build_dir"/conan_toolchain.cmake -DINSTALL_TO_BIN=ON
+cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE=$build_type -DCMAKE_TOOLCHAIN_FILE="$build_dir"/conan_toolchain.cmake -DINSTALL_TO_BIN=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build "$build_dir" --parallel $(($(nproc) - 1)) --verbose
 

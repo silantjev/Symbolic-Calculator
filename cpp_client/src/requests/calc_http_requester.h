@@ -15,6 +15,7 @@ class CalcHttpRequester : public QObject
 protected:
     QJsonObject m_data;
 private:
+    // clang-uml: aggregate -
     HttpRequestExecutor* m_executor;
 
 public:

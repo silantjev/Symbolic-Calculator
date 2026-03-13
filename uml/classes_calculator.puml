@@ -1,0 +1,137 @@
+@startuml classes_calculator
+set namespaceSeparator none
+
+class "Symbolic" {
+  graph : dict
+  variables : dict
+  bottom(oper)
+  calc_sym(expr)
+  sumprod(args, sign)
+  symbolic_expr(expr: str)
+}
+
+interface ICalc {
+  clear_all()
+  current_values() -> str
+  set_expr(expr)
+  set_new_expr(expr)
+  set_option(k, val) -> bool
+  set_se(expr)
+  set_sec(sec)
+  set_value(var, expr)
+  get_explanations() -> dict[str, str]
+  get_expr()
+  get_help_text() -> str
+  get_nice(se) -> str
+  get_options() -> dict[str, int]
+  get_se()
+  get_sec()
+  get_var_names()
+  get_variables(include_unset) -> tuple[set[str], list[str]]
+  delete_all_values()
+  delete_value(var)
+  evaluate()
+}
+
+class "Calculator" extends Symbolic implements ICalc {
+  DEFAULT_OPTIONS : dict
+  logger
+  explanations : dict
+  expr : str
+  help_text : str
+  options : dict
+  se
+  sec
+  values : dict
+  dec_round(x)
+  get_current_variables() -> set[str]
+  get_session()
+  get_value(var: str) -> str
+  get_values(variable_set)
+  load_state(data)
+}
+
+class "CalcHttpRequester" {
+  base_url : str
+  data : dict
+  logger
+  delete(endpoint, params)
+  get(endpoint, params)
+  post(endpoint, json)
+  put_state()
+  save_state(session_id)
+}
+
+class "CalcClient" extends CalcHttpRequester implements ICalc {
+}
+
+class "CCalculator" {
+  calc : ICalc
+  state_manager : IStateManager
+  change_options()
+  change_values()
+  delete_values(delete_all)
+  evaluate()
+  main_menu(expr)
+  new_expr()
+  show_help()
+}
+
+class "QLE" {
+  keyPressEvent(e)
+}
+
+class "MainWin" {
+  calc : ICalc
+  state_manager : IStateManager
+  input_text : QLE
+  se_text : QLE
+  sec_text : QLE
+  btn_eval
+  btn_parse
+  btn_up1
+  btn_up2
+  closeEvent(event)
+  eval_down()
+  parse_down()
+  se_up()
+  sec_up()
+}
+
+interface "IStorage" {
+  logger
+  load(session_id)
+  save(session_data, session_id)
+}
+
+class "JSONStorage" implements IStorage {
+  DEFAULT_DB_FILENAME : str
+  json_path : Path
+}
+
+interface "IStateManager" {
+  {abstract}load_state(calc, session_id)
+  {abstract}save_state(calc, session_id)
+}
+
+class "StateManager" implements IStateManager {
+  logger
+  storage : IStorage
+  load_state(calc : Calculator, session_id)
+  save_state(calc : Calculator, session_id)
+}
+
+class "ClientStateManager" implements IStateManager {
+  save_state(calc : ClientCalc, session_id)
+}
+
+StateManager ..> Calculator : load_state, save_state
+ClientStateManager ..> CalcClient : save_state
+StateManager *-- IStorage : "storage"
+CCalculator *-- ICalc : calc
+CCalculator *-- IStateManager : state_manager
+MainWin *-- ICalc : calc
+MainWin *-- IStateManager : state_manager
+MainWin *-- QLE : "\*_text"
+
+@enduml

@@ -12,3 +12,6 @@ v2/
 *bin
 **/profiles/*.cfg
 CMakeUserPresets.json
+.clang-uml
+*.png
+CMakeFiles
