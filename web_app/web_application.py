@@ -1,78 +1,35 @@
-import re
-import os
+from typing import Annotated
+import secrets
 import sys
 from pathlib import Path
 from tokenize import TokenError
 
-from fastapi import FastAPI, Form, Response
+from fastapi import FastAPI, Form, Response, Cookie
 from fastapi.responses import HTMLResponse
 
 FILEDIR = Path(__file__).resolve().parent
 ROOT = FILEDIR.parent
 sys.path.insert(0, str(ROOT))
 
-from core.calculator import Calculator
-from core.logger import make_logger
-from core.session_storage import JSONStorage, StateManager
-
-
-console_logging = os.environ.get("CONSOLE_LOGGING", "yes")
-file_logging = os.environ.get("FILE_LOGGING", "yes")
-log_console = (console_logging != "no")
-log_file = (file_logging != "no")
-
-conf_path = os.environ.get("CONF_PATH", "")
-
-logger = make_logger(name="web", console=log_console, file=log_file)
-calc = Calculator(logger=logger)
-storage = JSONStorage(logger=logger, json_path=conf_path)
-state_manager = StateManager(storage)
-
-state_manager.load_state(calc)
-
-class HtmlGenetator:
-    def __init__(self, template_path, error_template_path, info_template_path):
-        assert template_path.is_file(), f'File {template_path} not found'
-        assert error_template_path.is_file(), f'File {error_template_path} not found'
-        assert info_template_path.is_file(), f'File {error_template_path} not found'
-        with open(template_path, 'r', encoding='utf8') as f:
-            self.template = f.read()
-        with open(error_template_path, 'r', encoding='utf8') as f:
-            self.error_template = f.read()
-        with open(info_template_path, 'r', encoding='utf8') as f:
-            self.info_template = f.read()
-        self.url_reg_expr = re.compile(r'(https?://[\w\-./]+)')
-
-    def get_html(self, calc):
-        return self.template.format(
-                expr=calc.expr,
-                se=calc.get_nice(),
-                sec=str(calc.sec),
-            )
-
-    def show_error(self, expr, error):
-        return self.error_template.format(
-                expr=expr,
-                error=error,
-            )
-
-    def show_info(self, calc):
-        html_text = self.info_template.format(text=calc.get_help_text())
-        return re.sub(self.url_reg_expr, r'<a href="\1">\1</a>', html_text)
+from web_app.app_utils import HtmlGenetator, Sessions
 
 html_gen = HtmlGenetator(
         template_path=FILEDIR / 'template.html',
         error_template_path=FILEDIR / 'error.html',
         info_template_path=FILEDIR / 'info.html',
     )
+sess = Sessions()
 app = FastAPI()
 
 @app.on_event("shutdown")
 def shutdown_event():
-    state_manager.save_state(calc)
+    sess.save()
 
 @app.get("/symcalc", response_class=HTMLResponse)
-def start():
+def start(response: Response):
+    uu_id = sess.UUID_THRESHOLD + secrets.randbits(32)
+    calc = sess.get_calc(uu_id)
+    response.set_cookie(key="session_uuid", value=uu_id, httponly=True)
     return html_gen.get_html(calc)
 
 css_path = FILEDIR / "template.css"
@@ -83,12 +40,12 @@ css_content = css_path.read_text(encoding="utf-8")
 async def get_css():
     return Response(content=css_content, media_type="text/css")
 
-def _set_new_expression(expr):
+def _set_new_expression(calc, expr):
     try:
         error = calc.set_new_expr(expr)
     except (SyntaxError, TokenError) as exc:
         calc.logger.error("TokenError: %s", exc)
-        return html_gen.show_error(expr=expr, error=f"Синтактическая ошибка: {exc}")
+        return html_gen.show_error(expr=expr, error=f"Синтаксическая ошибка: {exc}")
     
     if error:
         calc.logger.error("Error: %s", error)
@@ -100,25 +57,32 @@ def _set_new_expression(expr):
 
 
 @app.post("/symcalc/set_new_expr", response_class=HTMLResponse)
-def set_new_expr(expr: str = Form(...)):
+def set_new_expr(expr: str = Form(...), session_uuid: Annotated[int, Cookie()] = 0):
+    calc = sess.get_calc(session_uuid)
     calc.expr = expr
-    return _set_new_expression(expr)
+    return _set_new_expression(calc, expr)
 
 @app.post("/symcalc/process_se", response_class=HTMLResponse)
 def precess_se(
         se: str = Form(...),
         action: str = Form(...),
+        session_uuid: Annotated[int, Cookie()] = 0,
     ):
-    if action == "evaluate":
-        return _set_new_expression(se)
-    #Перебросить se -> expr
-    calc.se = se
-    calc.expr = calc.get_nice()
-    return html_gen.get_html(calc)
+    calc = sess.get_calc(session_uuid)
+    match action:
+        case "evaluate":
+            return _set_new_expression(calc, se)
+        case "se_up": #Перебросить se -> expr
+            calc.se = se
+            calc.expr = calc.get_nice()
+            return html_gen.get_html(calc)
+        case _:
+            raise ValueError(f"Wrong action '{action}'")
 
 
 @app.post("/symcalc/up", response_class=HTMLResponse)
-def up(sec: str = Form(...)):
+def up(sec: str = Form(...), session_uuid: Annotated[int, Cookie()] = 0):
+    calc = sess.get_calc(session_uuid)
     #Перебросить sec -> se
     calc.sec = sec
     calc.se = sec
@@ -126,13 +90,22 @@ def up(sec: str = Form(...)):
     return html_gen.get_html(calc)
 
 @app.post("/symcalc/clear_all", response_class=HTMLResponse)
-def clear_all():
+def clear_all(session_uuid: Annotated[int, Cookie()] = 0):
+    calc = sess.get_calc(session_uuid)
     calc.clear_all()
     return html_gen.get_html(calc)
 
 @app.get('/symcalc/info', response_class=HTMLResponse)
-def show_info_text():
+def show_info_text(session_uuid: Annotated[int, Cookie()] = 0):
+    calc = sess.get_calc(session_uuid)
     return html_gen.show_info(calc)
+
+@app.get("/symcalc/{uu_id}", response_class=HTMLResponse)
+def start_with_uu_id(uu_id: int, response: Response):
+    calc = sess.get_calc(uu_id)
+    response.set_cookie(key="session_uuid", value=uu_id, httponly=True)
+    return html_gen.get_html(calc)
+
 
 """
 @app.get("/symcalc/current_values")
@@ -182,6 +155,7 @@ def delete_value(var: str) -> State:
     return read_state(calc)
 
 """
+
 
 if __name__ == "__main__":
     import uvicorn 
