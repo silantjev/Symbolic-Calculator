@@ -1,0 +1,17 @@
+[Unit]
+Description=Calculator Web Service
+After=network.target
+
+[Service]
+Type=simple
+User={user}
+Group={user}
+WorkingDirectory={dir}
+ExecStart={dir}/run_web_service.sh -f --port 52365
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

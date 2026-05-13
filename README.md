@@ -176,3 +176,16 @@ sudo apt-get install build-essential cmake qtbase5-dev qttools5-dev-tools qt5-de
 cd cpp_client
 ./BUILD_WITHOUT_CONAN.sh
 ```
+
+## Установка веб-сервиса как сервиса в ubuntu
+```
+chmod +x run_web_service.sh
+cat web/ubuntu/websymcalc_example.service | sed "s/{user}/$USER/" | sed "s|{dir}|$(pwd)|"
+vim web/ubuntu/websymcalc.service # отредактировать, если нужно
+sudo cp web/ubuntu/websymcalc.service /etc/systemd/system/websymcalc.service
+sudo systemctl daemon-reload
+sudo systemctl enable websymcalc.service # автозапуск
+sudo systemctl start websymcalc.service
+sudo systemctl status websymcalc.service # проверка
+journalctl -u websymcalc.service -f         # смотреть логи в реальном времени
+```
