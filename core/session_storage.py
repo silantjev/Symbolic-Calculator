@@ -13,9 +13,22 @@ def make_path(path):
         path.parent.mkdir(parents=True)
     return path
 
+def serialize_value(obj):
+    if isinstance(obj, (str, bool, type(None), float, int)):
+        return obj
+    if isinstance(obj, (list, tuple)):
+        return type(obj)(map(serialize_value, obj))
+    if isinstance(obj, dict):
+        return {str(key): serialize_value(val) for key, val in obj.items()}
+    if hasattr(obj, '__int__'):
+        return int(obj)
+    if hasattr(obj, '__float__'):
+        return float(obj)
+    return str(obj)
+
 class JSONStorage:
     DEFAULT_DB_FILENAME = 'sessions.json'
-    
+
     def __init__(self, logger, json_path=""):
         self.logger = logger
         if not json_path:
@@ -45,7 +58,7 @@ class JSONStorage:
     def save(self, session_data, session_id):
         assert isinstance(session_data, dict)
         data = self._load()
-        data[str(session_id)] = session_data
+        data[str(session_id)] = serialize_value(session_data)
         with open(self.json_path, 'w', encoding="utf-8") as f:
             json.dump(data, f, indent=4)
         self.logger.info("Session saved to '%s'", self.json_path)
